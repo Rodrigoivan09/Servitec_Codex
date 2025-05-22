@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:fragment="head">
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+	<link th:href="@{/bootstrap/css/animate.min.css}" rel="stylesheet">
+	<link th:href="@{/iconos/bootstrap-icons.css}" rel="stylesheet">
+	<link th:href="@{/tema/miestilo.css}" rel="stylesheet">
+
+	<title>Registro de Técnico - Servitec</title>
+
+	<style>
+		.form-text.invalid { color: #dc3545; }
+        .form-text.valid { color: #28a745; }
+        .form-control.valid { border-color: #28a745; }
+        .form-control.invalid { border-color: #dc3545; }
+        .form-info { font-size: 0.85em; color: #6c757d; }
+        .navbar { z-index: 1050; position: relative; }
+        footer img { max-width: 500px; height: auto; }
+
+        .hero {
+          height: 500px;
+          background-size: cover;
+          background-position: center;
+          transition: background-image 1s ease-in-out;
+          z-index: 1;
+          position: relative;
+        }
+
+        .dropdown-menu.blur-effect {
+          backdrop-filter: blur(8px);
+          background-color: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-text {
+          background-color: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(10px);
+          padding: 1.5rem;
+          border-radius: 1rem;
+          display: inline-block;
+        }
+	</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<header th:fragment="header">
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg">
+		<div class="container">
+			<a th:href="@{/user}" class="navbar-brand d-flex align-items-center animate__animated animate__fadeInLeft">
+				<img class="rounded-circle me-2" th:src="@{/image/logo.webp}" alt="Servitec Logo" width="50" height="50">
+				<span class="fs-4">Servitec</span>
+			</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Mostrar / Ocultar Menú">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse animate__animated animate__fadeInRight" id="menu">
+				<ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5">
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="serviciosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+							Servicios
+						</a>
+						<ul class="dropdown-menu shadow-sm animate__animated animate__fadeIn blur-effect" aria-labelledby="serviciosDropdown">
+							<li><a class="dropdown-item" th:href="@{/user/plomeros}">Plomería</a></li>
+							<li><a class="dropdown-item" th:href="@{/user/electricistas}">Instalaciones Eléctricas</a></li>
+							<li><a class="dropdown-item" th:href="@{/user/electrodomesticos}">Reparación de Electrodomésticos</a></li>
+						</ul>
+					</li>
+					<li class="nav-item"><a th:href="@{/user/solicitudes}" class="nav-link">Solicitudes</a></li>
+					<li class="nav-item"><a th:href="@{/user/pagos}" class="nav-link">Pagos</a></li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="perfilDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+							<i class="bi bi-person-circle"></i> Perfil
+						</a>
+						<ul class="dropdown-menu dropdown-menu-end shadow-sm animate__animated animate__fadeIn blur-effect" aria-labelledby="perfilDropdown">
+							<li><a class="dropdown-item" th:href="@{/perfil}">Mi perfil</a></li>
+							<li><a class="dropdown-item" href="#">Mi cuenta</a></li>
+							<li><a class="dropdown-item" href="#">Notificaciones</a></li>
+							<li><a class="dropdown-item" href="#">Configuración</a></li>
+							<li><hr class="dropdown-divider"></li>
+							<li><a class="dropdown-item text-danger" th:href="@{/logout}">Cerrar sesión</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<section id="hero" class="hero text-white d-flex align-items-center justify-content-center text-center animate__animated animate__zoomInDown"
+			 style="background-image: url('/image/bg-techs.webp');">
+		<div class="container">
+			<div class="hero-text">
+				<h1 class="display-4 fw-bold">Bienvenido a Servitec</h1>
+				<p class="lead">Especialistas en mantenimiento y reparación para tu hogar</p>
+			</div>
+		</div>
+	</section>
+</header>
+
+<!-- Contenido adicional -->
+<main class="container my-5 animate__animated animate__fadeIn">
+	<div class="row align-items-center">
+		<div class="col-md-6 mb-4 mb-md-0 text-center">
+			<img th:src="@{/image/familia.png}" alt="Beneficios Servitec" class="img-fluid rounded shadow" style="max-width: 100%">
+		</div>
+		<div class="col-md-6">
+			<h2 class="fw-bold mb-3">¿Por qué elegir Servitec?</h2>
+			<p class="lead">Al contratar nuestros servicios, obtienes:</p>
+			<ul class="list-group list-group-flush">
+				<li class="list-group-item">✔ Técnicos certificados y verificados.</li>
+				<li class="list-group-item">✔ Atención rápida y soporte 24/7.</li>
+				<li class="list-group-item">✔ Precios claros, sin letras chiquitas.</li>
+				<li class="list-group-item">✔ Garantía de satisfacción en cada servicio.</li>
+				<li class="list-group-item">✔ Agendamiento fácil y seguro desde tu celular.</li>
+			</ul>
+		</div>
+	</div>
+</main>
+
+<!-- Footer -->
+<footer th:fragment="footer" class="bg-dark text-white mt-5 pt-4 pb-3">
+	<div class="container text-center animate__animated animate__fadeInUp">
+		<img th:src="@{/image/fondo.webp}" alt="Ilustración del servicio" class="img-fluid my-3 rounded shadow-sm" width="600">
+		<p class="mb-0">Cuidamos tu hogar como si fuera el nuestro.</p>
+		<p class="text-muted small">© 2025 Servitec - Todos los derechos reservados</p>
+	</div>
+	<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+	<script th:src="@{/bootstrap/js/fondos.js}"></script>
+</footer>
+
+</body>
+</html>
