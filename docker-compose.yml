@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: servitec_db
+    command:
+      - "--lower_case_table_names=1" # evita problemas de mayúsculas/minúsculas en nombres de tablas
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+    environment:
+      MYSQL_ROOT_PASSWORD: MSqlDB
+      MYSQL_DATABASE: ServitecDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pMSqlDB"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build: .
+    container_name: servitec_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Datasource (override a application.yml/properties)
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/ServitecDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: MSqlDB
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      # JWT
+      JWT_SECRET: 5f39c83d2d0482e07b5306f3f5a0fd8e1b4e9844987121ba4b99f3f4805fd4f85cc0f24ece8556dd10456a45d20cd2d61e7c36a77583674be979b071b869f34f
+      # Puerto de la app (opcional; por defecto 8090)
+      SERVER_PORT: 8090
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8090:8090"
+    volumes:
+      # Persistir y compartir subidas (efirma/certificacion)
+      - ./uploads:/app/uploads
+
+volumes:
+  db_data:

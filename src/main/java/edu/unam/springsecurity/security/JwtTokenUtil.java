@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import edu.unam.springsecurity.security.UserDetailsImpl;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -27,13 +28,20 @@ public class JwtTokenUtil {
 
     public String generateToken(Authentication authentication) {
         String username = authentication.getName();
-        String authorities = authentication.getAuthorities().stream()
+        var roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+                .toList();
+
+        Integer uid = null;
+        if (authentication.getPrincipal() instanceof UserDetailsImpl udi) {
+            uid = udi.getId();
+        }
 
         return Jwts.builder()
                 .setSubject(username)
-                .claim("roles", authorities)
+                .claim("uid", uid)
+                .claim("roles", roles)
+                .claim("username", username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(jwtSecretKey)
@@ -45,7 +53,15 @@ public class JwtTokenUtil {
     }
 
     public String getRolesFromToken(String token) {
-        return parseClaims(token).getBody().get("roles", String.class);
+        return parseClaims(token).getBody().get("roles").toString();
+    }
+
+    public Integer getUserIdFromToken(String token) {
+        Object uid = parseClaims(token).getBody().get("uid");
+        if (uid == null) return null;
+        if (uid instanceof Integer i) return i;
+        if (uid instanceof Number n) return n.intValue();
+        return Integer.valueOf(uid.toString());
     }
 
     public boolean validateToken(String token) {

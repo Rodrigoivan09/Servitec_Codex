@@ -3,6 +3,7 @@ package edu.unam.springsecurity.service;
 import edu.unam.springsecurity.model.Administrador;
 import edu.unam.springsecurity.model.Usuario;
 import edu.unam.springsecurity.model.Tecnico;
+import edu.unam.springsecurity.security.UserDetailsImpl;
 import edu.unam.springsecurity.repository.AdministradorRepository;
 import edu.unam.springsecurity.repository.UsuarioRepository;
 import edu.unam.springsecurity.repository.TecnicoRepository;
@@ -33,11 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             admin = administradorRepository.findByTelefono(input);
         }
         if (admin != null) {
-            return new User(
-                    admin.getCorreo(),
-                    admin.getContrasena(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
-            );
+            return new UserDetailsImpl(admin);
         }
 
         // Buscar por correo o teléfono en Usuarios
@@ -46,11 +43,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             usuario = usuarioRepository.findByTelefono(input);
         }
         if (usuario != null) {
-            return new User(
-                    usuario.getCorreo(),
-                    usuario.getContrasena(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-            );
+            return new UserDetailsImpl(usuario);
         }
 
         // Buscar por correo o teléfono en Técnicos
@@ -59,11 +52,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             tecnico = tecnicoRepository.findByTelefono(input);
         }
         if (tecnico != null) {
-            return new User(
-                    tecnico.getCorreo(),
-                    tecnico.getContrasena(),
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_TECNICO"))
-            );
+            return new UserDetailsImpl(tecnico);
         }
 
         throw new UsernameNotFoundException("No se encontró ningún usuario, técnico o administrador con: " + input);

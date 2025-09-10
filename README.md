@@ -2,6 +2,41 @@
 Plataforma web de gestión de servicios técnicos para el hogar, desarrollada con Spring Boot, Thymeleaf y MariaDB.
 
 🚀 Instrucciones para ejecutar el proyecto
+
+Opción A) Docker (recomendado)
+
+1) Prerrequisitos
+- Docker 24+ y Docker Compose 2+
+- Puerto `8090` libre; `3306` si usas la DB expuesta.
+
+2) Variables importantes (preconfiguradas en docker-compose.yml)
+- `SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/ServitecDB`
+- `SPRING_DATASOURCE_USERNAME=root`
+- `SPRING_DATASOURCE_PASSWORD=MSqlDB`
+- `JWT_SECRET=<valor>` (ya definido con un secreto de ejemplo)
+
+3) Levantar stack (App + MariaDB)
+
+docker compose up --build
+
+4) Acceso
+- App: http://localhost:8090
+- MariaDB: localhost:3306 (root / MSqlDB)
+
+5) Migraciones y datos semilla (Flyway)
+- La app corre con el perfil `docker` y ejecuta Flyway al iniciar.
+- Crea tablas + datos iniciales (admin/user/categorías/servicios/tarifas) desde `src/main/resources/db/migration/V1__init.sql`.
+- Los archivos de e.firma/certificación se guardan en `./uploads` (mapeado al contenedor).
+
+Notas Docker
+- El servicio de DB se ejecuta con `--lower_case_table_names=1` para evitar problemas de mayúsculas/minúsculas entre tablas SQL y entidades JPA.
+- La app usa el perfil `docker` (`SPRING_PROFILES_ACTIVE=docker`). Puedes ajustar variables en `docker-compose.yml`.
+- Si cambias el puerto, ajusta el mapeo en `docker-compose.yml` y/o `SERVER_PORT`.
+
+Reinicializar base de datos (opcional)
+- Para recrear la DB desde cero: `docker compose down -v && docker compose up --build`.
+
+Opción B) Local (sin Docker)
 📦 Descargar y preparar el proyecto
 Descarga el archivo .zip del proyecto Servitec.
 Extrae el contenido en la carpeta de tu preferencia.
@@ -73,6 +108,13 @@ Thymeleaf
 MariaDB
 
 HTML5 / Bootstrap
+
+🔐 JWT (API)
+- Login: `POST /auth/login` con body `{ "correo": "<email_o_tel>", "contrasena": "<pwd>" }` → setea cookie `ACCESS_TOKEN` (HttpOnly, SameSite=Lax) y retorna `{ token }`.
+- Refresh: `POST /auth/refresh` lee token de `Authorization: Bearer ...` o cookie `ACCESS_TOKEN`, renueva cookie y retorna `{ token }`.
+- Uso desde frontend: el filtro toma el token de la cookie automáticamente. Para peticiones fetch/AJAX, usa `credentials: 'include'` si no es misma-origen.
+- Claims del token: `sub` (username), `uid` (id del usuario), `roles` (lista de roles), `username`.
+- Sesión: stateless (sin sesión de servidor); CORS habilitado con credenciales.
 
 👨‍💻 Autor
 Rodrigo Olvera
