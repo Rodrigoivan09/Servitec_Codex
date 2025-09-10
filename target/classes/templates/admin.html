@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml"
+	  lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>Admin - Servitec</title>
+	<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+	<link th:href="@{/iconos/bootstrap-icons.css}" rel="stylesheet">
+	<link th:href="@{/tema/miestilo.css}" rel="stylesheet">
+</head>
+<body>
+<!-- Menú de navegación estilo Servitec -->
+<header th:fragment="header">
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+		<div class="container">
+			<a th:href="@{/}" class="navbar-brand d-flex align-items-center">
+				<img class="rounded-circle me-2" th:src="@{/image/logo.webp}" alt="Servitec Logo" width="50" height="50">
+				<span class="fs-4">Servitec</span>
+			</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="menu">
+				<ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5">
+					<li class="nav-item"><a th:href="@{/}" class="nav-link">Inicio</a></li>
+					<li class="nav-item"><a th:href="@{/login}" class="nav-link">Cerrar sesión</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+</header>
+
+<main class="container text-center shadow-lg p-4 mt-5 bg-body-tertiary rounded">
+	<div class="main">
+		<h2 th:text="${text}"></h2>
+		<div>
+			<p>Usuario: <span sec:authentication="name">NO ENCONTRADO</span></p>
+			<p>Roles: <span sec:authentication="principal.authorities">NO ENCONTRADO</span></p>
+		</div>
+	</div>
+</main>
+
+<footer th:fragment="footer">
+	<div class="container text-center mt-4">
+		<img th:src="@{/image/fondo.webp}" class="img-fluid rounded mb-2" height="200" width="500" alt="Fondo ilustrativo" />
+		<p class="text-muted">Cuidamos tu hogar como si fuera el nuestro.</p>
+	</div>
+	<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</footer>
+</body>
+</html>

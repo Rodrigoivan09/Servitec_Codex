@@ -1,0 +1,4 @@
+{
+  // Auto-guardar al cambiar de foco de la ventana o editor
+  "files.autoSave": "onFocusChange"
+}
