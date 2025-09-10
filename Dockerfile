@@ -11,9 +11,18 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 ENV TZ=UTC
 COPY --from=build /workspace/target/*.jar /app/app.jar
+
+# Create non-root user and take ownership
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+
 # Expose the application port
 EXPOSE 8090
+
 # Default JVM options can be overridden via JAVA_TOOL_OPTIONS
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
-ENTRYPOINT ["java","-jar","/app/app.jar"]
 
+# Drop privileges
+USER appuser
+
+ENTRYPOINT ["java","-jar","/app/app.jar"]
