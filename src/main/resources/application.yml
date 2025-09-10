@@ -1,12 +1,12 @@
 server:
-  port: 8090
+  port: ${SERVER_PORT:8090}
 
 # Set here configurations for the database connection
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3306/springsecurity
-    username: root
-    password: MSqlDB
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     show-sql: true
@@ -24,6 +24,6 @@ logging:
 
 # JWT
 jwt:
-  secret: 5f39c83d2d0482e07b5306f3f5a0fd8e1b4e9844987121ba4b99f3f4805fd4f85cc0f24ece8556dd10456a45d20cd2d61e7c36a77583674be979b071b869f34f
-  expirationDateInMs: 3600
-  refreshExpirationDateInMs: 900
+  secret: ${JWT_SECRET}
+  expirationDateInMs: ${JWT_EXPIRATION:3600}
+  refreshExpirationDateInMs: ${JWT_REFRESH_EXPIRATION:900}
