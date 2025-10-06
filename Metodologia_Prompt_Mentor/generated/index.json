@@ -1,0 +1,25 @@
+{
+  "generated_on": "2025-09-25T19:45:12.131410+00:00",
+  "services": [
+    "auth_user",
+    "deps",
+    "fastapi",
+    "measurement_service",
+    "scrapper_curp2",
+    "scrapper_data",
+    "scrapper_deps",
+    "scrapper_scannrtc",
+    "scripts",
+    "security",
+    "server_cat_gobi_salud",
+    "server_cat_nom024",
+    "server_catalog",
+    "server_data",
+    "server_email",
+    "server_file",
+    "server_ia",
+    "test",
+    "validator_employee"
+  ],
+  "global_doc": "/home/rodrigo/Documents/backend/Metodologia_Prompt_Mentor/generated/CODEx_NOTES_update.md"
+}

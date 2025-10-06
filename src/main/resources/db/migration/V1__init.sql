@@ -139,11 +139,11 @@ CREATE TABLE IF NOT EXISTS Administradores (
 
 -- Seeds
 INSERT INTO Administradores (nombre, correo, telefono, contrasena)
-VALUES ('admin', 'admin', '9999999999', 'password')
+VALUES ('admin', 'admin', '9999999999', '{noop}password')
 ON DUPLICATE KEY UPDATE telefono=VALUES(telefono);
 
 INSERT INTO Usuarios (nombre, correo, telefono, direccion, contrasena)
-VALUES ('user', 'user', '5551234567', 'Calle Falsa 123, CDMX', 'password')
+VALUES ('user', 'user', '5551234567', 'Calle Falsa 123, CDMX', '{noop}password')
 ON DUPLICATE KEY UPDATE telefono=VALUES(telefono);
 
 INSERT INTO Categorias (nombre_categoria) VALUES
@@ -179,4 +179,3 @@ INSERT INTO Tarifas (id_servicio, tarifa_base) VALUES
 (4, 800.00), (5, 300.00), (6, 400.00),
 (7, 750.00), (8, 850.00), (9, 500.00)
 ON DUPLICATE KEY UPDATE tarifa_base=VALUES(tarifa_base);
-

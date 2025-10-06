@@ -5,7 +5,8 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://db:3306/ServitecDB}
     username: ${SPRING_DATASOURCE_USERNAME:root}
-    password: ${SPRING_DATASOURCE_PASSWORD:MSqlDB}
+    # Prefer env SPRING_DATASOURCE_PASSWORD; fallback to MYSQL_ROOT_PASSWORD; final fallback 'MSqlDB'
+    password: ${SPRING_DATASOURCE_PASSWORD:${MYSQL_ROOT_PASSWORD:MSqlDB}}
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     show-sql: true
@@ -21,11 +22,12 @@ spring:
     baseline-on-migrate: true
 
 jwt:
-  secret: ${JWT_SECRET:change-me}
+  secret: ${JWT_SECRET:4f2ac6d7e9b03c1f6a28b59d4c5e7f80213a9c8b4d5e6f708192a3b4c5d6e7f8}
   expirationDateInMs: ${JWT_EXPIRATION:3600}
   refreshExpirationDateInMs: ${JWT_REFRESH_EXPIRATION:900}
 
 logging:
   level:
     root: INFO
-
+    edu.unam: DEBUG
+    org.springframework.security: INFO

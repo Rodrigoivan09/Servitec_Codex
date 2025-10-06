@@ -9,19 +9,18 @@ Opción A) Docker (recomendado)
 - Docker 24+ y Docker Compose 2+
 - Puerto `8090` libre; `3306` si usas la DB expuesta.
 
-2) Variables importantes (preconfiguradas en docker-compose.yml)
-- `SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/ServitecDB`
-- `SPRING_DATASOURCE_USERNAME=root`
-- `SPRING_DATASOURCE_PASSWORD=MSqlDB`
-- `JWT_SECRET=<valor>` (ya definido con un secreto de ejemplo)
+2) Configurar variables de entorno
+   - Copia `.env.example` a `.env` y edítalo con tus propios valores.
+   - Define al menos `MYSQL_ROOT_PASSWORD` y un `JWT_SECRET` robusto.
+   - Opcionalmente ajusta `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` u otras variables.
 
 3) Levantar stack (App + MariaDB)
 
 docker compose up --build
 
 4) Acceso
-- App: http://localhost:8090
-- MariaDB: localhost:3306 (root / MSqlDB)
+   - App: http://localhost:8090
+   - MariaDB: localhost:3306 (usuario `root` con la contraseña que definiste)
 
 5) Migraciones y datos semilla (Flyway)
 - La app corre con el perfil `docker` y ejecuta Flyway al iniciar.
@@ -32,6 +31,35 @@ Notas Docker
 - El servicio de DB se ejecuta con `--lower_case_table_names=1` para evitar problemas de mayúsculas/minúsculas entre tablas SQL y entidades JPA.
 - La app usa el perfil `docker` (`SPRING_PROFILES_ACTIVE=docker`). Puedes ajustar variables en `docker-compose.yml`.
 - Si cambias el puerto, ajusta el mapeo en `docker-compose.yml` y/o `SERVER_PORT`.
+
+Hot reload (rebuild automático)
+- Con Docker Compose v2.22+ puedes observar cambios y reconstruir automáticamente la imagen de la app:
+
+```
+make watch
+# o
+docker compose watch
+```
+
+- Esto detecta cambios en `src/`, `pom.xml` y `Dockerfile` y reconstruye/rehace el contenedor de `app` automáticamente.
+- Si tu versión de Compose no soporta `watch`, puedes seguir usando `docker compose up --build` tras cada cambio.
+
+Modo Dev (recarga instantánea sin rebuild)
+- Para una retroalimentación más rápida, hay un servicio `app-dev` que monta el código fuente y ejecuta `mvn spring-boot:run` con Devtools.
+
+Comandos:
+```
+make dev-up        # Levanta db + app-dev en segundo plano
+make dev-logs      # Sigue logs solo de app-dev
+# Alternativa en primer plano
+make dev-up-fg
+```
+
+Requisitos y consejos:
+- Docker Compose 2.20+ y Maven cache persistente (volumen `m2_cache`).
+- Activa el auto-save del editor (VS Code: Files: Auto Save → afterDelay).
+- Si usas VS Code/Java, habilita compilación automática para que Devtools reinicie al compilar a `target/classes`.
+- La app se expone igualmente en `http://localhost:8090`.
 
 Reinicializar base de datos (opcional)
 - Para recrear la DB desde cero: `docker compose down -v && docker compose up --build`.

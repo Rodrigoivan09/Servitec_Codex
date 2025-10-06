@@ -11,6 +11,10 @@ import edu.unam.springsecurity.repository.UsuarioRepository;
 import edu.unam.springsecurity.service.*;
 import edu.unam.springsecurity.util.Archivos;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,6 +39,7 @@ import static edu.unam.springsecurity.util.Archivos.obtenerExtension;
 
 @Controller
 public class HomeController {
+    private static final Logger log = LoggerFactory.getLogger(HomeController.class);
 	private final HomeService homeService;
 	private final UserService userService;
 	private final AdminService adminService;
@@ -162,11 +167,11 @@ public class HomeController {
 //		return "admin";
 //	}
 
-	@GetMapping("/tecnico")
-	public String tecnico(Model model) {
-		model.addAttribute("text", tecnicoService.getText());
-		return "tecnico";
-	}
+//    @GetMapping("/tecnico")
+//    public String tecnico(Model model) {
+//        model.addAttribute("text", tecnicoService.getText());
+//        return "tecnico";
+//    }
 
 
 	@GetMapping("/login")
@@ -183,20 +188,26 @@ public class HomeController {
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 
-	@PostMapping("/login_sesion")
-	public String loginPersonalizado(@RequestParam String username,
-									 @RequestParam String password,
-									 HttpSession session,
-									 RedirectAttributes redirectAttributes) {
+    @PostMapping("/login_sesion")
+    public String loginPersonalizado(@RequestParam String username,
+                                    @RequestParam String password,
+                                    HttpSession session,
+                                    HttpServletRequest request,
+                                    RedirectAttributes redirectAttributes) {
+
+        log.info("[LOGIN] intento de acceso username='{}' ip={} ua={}",
+                username,
+                request.getRemoteAddr(),
+                request.getHeader("User-Agent"));
 
 		// 1. Validar si es administrador
 		Administrador admin = administradorRepository.findByCorreo(username);
 		if (admin == null && username.matches("\\d{10}")) {
 			admin = administradorRepository.findByTelefono(username);
 		}
-		if (admin != null && admin.getContrasena().equals(password)) {
-			session.setAttribute("admin", admin);
-			session.setAttribute("idAdmin", admin.getId());
+        if (admin != null && admin.getContrasena().equals(password)) {
+            session.setAttribute("admin", admin);
+            session.setAttribute("idAdmin", admin.getId());
 
 			UserDetails userDetails = org.springframework.security.core.userdetails.User
 					.withUsername(admin.getCorreo())
@@ -206,19 +217,24 @@ public class HomeController {
 
 			Authentication auth = new UsernamePasswordAuthenticationToken(
 					userDetails, null, userDetails.getAuthorities());
-			SecurityContextHolder.getContext().setAuthentication(auth);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            // Persistir el SecurityContext en la sesión
+            request.getSession(true).setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext());
 
-			return "redirect:/admin";
-		}
+            log.info("[LOGIN] ADMIN autenticado username='{}' -> /admin", username);
+            return "redirect:/admin";
+        }
 
 		// 2. Validar si es usuario
 		Usuario usuario = usuarioRepository.findByCorreo(username);
 		if (usuario == null && username.matches("\\d{10}")) {
 			usuario = usuarioRepository.findByTelefono(username);
 		}
-		if (usuario != null && usuario.getContrasena().equals(password)) {
-			session.setAttribute("usuario", usuario);
-			session.setAttribute("idUsuario", usuario.getId());
+        if (usuario != null && usuario.getContrasena().equals(password)) {
+            session.setAttribute("usuario", usuario);
+            session.setAttribute("idUsuario", usuario.getId());
 
 			UserDetails userDetails = org.springframework.security.core.userdetails.User
 					.withUsername(usuario.getCorreo())
@@ -228,19 +244,23 @@ public class HomeController {
 
 			Authentication auth = new UsernamePasswordAuthenticationToken(
 					userDetails, null, userDetails.getAuthorities());
-			SecurityContextHolder.getContext().setAuthentication(auth);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            request.getSession(true).setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext());
 
-			return "redirect:/usuario";
-		}
+            log.info("[LOGIN] USER autenticado username='{}' -> /usuario", username);
+            return "redirect:/usuario";
+        }
 
 		// 3. Validar si es técnico
 		Tecnico tecnico = tecnicoRepository.findByCorreo(username);
 		if (tecnico == null && username.matches("\\d{10}")) {
 			tecnico = tecnicoRepository.findByTelefono(username);
 		}
-		if (tecnico != null && tecnico.getContrasena().equals(password)) {
-			session.setAttribute("tecnico", tecnico);
-			session.setAttribute("idTecnico", tecnico.getId());
+        if (tecnico != null && tecnico.getContrasena().equals(password)) {
+            session.setAttribute("tecnico", tecnico);
+            session.setAttribute("idTecnico", tecnico.getId());
 
 			UserDetails userDetails = org.springframework.security.core.userdetails.User
 					.withUsername(tecnico.getCorreo())
@@ -250,15 +270,20 @@ public class HomeController {
 
 			Authentication auth = new UsernamePasswordAuthenticationToken(
 					userDetails, null, userDetails.getAuthorities());
-			SecurityContextHolder.getContext().setAuthentication(auth);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            request.getSession(true).setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext());
 
-			return "redirect:/tecnico";
-		}
+            log.info("[LOGIN] TECNICO autenticado username='{}' -> /tecnico", username);
+            return "redirect:/tecnico";
+        }
 
 		// Si ninguno coincide
-		redirectAttributes.addFlashAttribute("error", "Credenciales inválidas");
-		return "redirect:/login";
-	}
+        log.warn("[LOGIN] fallo de autenticación username='{}'", username);
+        redirectAttributes.addFlashAttribute("error", "Credenciales inválidas");
+        return "redirect:/login";
+    }
 
 
 

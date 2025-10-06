@@ -225,4 +225,8 @@ dist/
 nbdist/
 .nb-gradle/
 
+# Local vendor JDKs and binary artifacts
+vendor/
+vendor/*
+
 # End of https://www.toptal.com/developers/gitignore/api/eclipse,macos,java,intellij+all,netbeans

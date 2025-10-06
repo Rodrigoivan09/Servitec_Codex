@@ -13,6 +13,7 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
@@ -25,12 +26,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    develop:
+      watch:
+        # Rebuild image and recreate container on source or build file changes
+        - action: rebuild
+          path: ./src
+        - action: rebuild
+          path: ./pom.xml
+        - action: rebuild
+          path: ./Dockerfile
     environment:
       # Datasource (override a application.yml/properties)
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mariadb://db:3306/${MYSQL_DATABASE}}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-${MYSQL_ROOT_PASSWORD}}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-none}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
       # JWT
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       # Puerto de la app (opcional; por defecto 8090)
@@ -42,5 +53,52 @@ services:
       # Persistir y compartir subidas (efirma/certificacion)
       - ./uploads:/app/uploads
 
+  app-dev:
+    image: maven:3.9-eclipse-temurin-17
+    container_name: servitec_app_dev
+    working_dir: /workspace
+    command: mvn -q -DskipTests -Dspring-boot.run.profiles=docker spring-boot:run
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mariadb://db:3306/${MYSQL_DATABASE}}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-${MYSQL_ROOT_PASSWORD}}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-none}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      SERVER_PORT: ${SERVER_PORT:-8090}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      # Devtools settings (optional tuning)
+      # SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: 1s
+      # SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: 400ms
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./:/workspace
+      - m2_cache:/root/.m2
+      - ./uploads:/workspace/uploads
+    profiles:
+      - dev
+
+  scrapper_deps:
+    profiles: [scrapper_deps]
+    build:
+      context: ./docker/base
+      dockerfile: scrapper-base.Dockerfile
+    image: scrapper-base:1.0
+    container_name: scrapper_deps_builder
+    command: ["bash","-lc","sleep infinity"]
+
+  scrapper_scannrtc:
+    profiles: [scrapper_scannrtc]
+    build:
+      context: ./scrapper_data
+      dockerfile: Dockerfile.scannrtc
+      args:
+        BASE_IMAGE: ${SCRAPPER_BASE_IMAGE:-python:3.11-slim}
+
 volumes:
   db_data:
+  m2_cache:

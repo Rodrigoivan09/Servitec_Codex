@@ -38,46 +38,7 @@
 </head>
 <body>
 <header>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg">
-    <div class="container">
-      <a th:href="@{/user}" class="navbar-brand d-flex align-items-center animate__animated animate__fadeInLeft">
-        <img class="rounded-circle me-2" th:src="@{/image/logo.webp}" alt="Servitec Logo" width="50" height="50">
-        <span class="fs-4">Servitec</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse animate__animated animate__fadeInRight" id="menu">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="serviciosDropdown" role="button" data-bs-toggle="dropdown">
-              Servicios
-            </a>
-            <ul class="dropdown-menu shadow-sm animate__animated animate__fadeIn blur-effect">
-              <li><a class="dropdown-item" th:href="@{/user/plomeros}">Plomería</a></li>
-              <li><a class="dropdown-item" th:href="@{/user/electricistas}">Instalaciones Eléctricas</a></li>
-              <li><a class="dropdown-item" th:href="@{/user/electrodomesticos}">Reparación de Electrodomésticos</a></li>
-            </ul>
-          </li>
-          <li class="nav-item"><a th:href="@{/user/solicitudes}" class="nav-link">Solicitudes</a></li>
-          <li class="nav-item"><a th:href="@{/user/pagos}" class="nav-link">Pagos</a></li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="perfilDropdown" role="button" data-bs-toggle="dropdown">
-              <i class="bi bi-person-circle"></i> Perfil
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm animate__animated animate__fadeIn blur-effect">
-              <li><a class="dropdown-item" th:href="@{/perfil}">Mi perfil</a></li>
-              <li><a class="dropdown-item" href="#">Mi cuenta</a></li>
-              <li><a class="dropdown-item" href="#">Notificaciones</a></li>
-              <li><a class="dropdown-item" href="#">Configuración</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" th:href="@{/logout}">Cerrar sesión</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <div th:replace="~{page-templates :: navbar}"></div>
   <section id="hero" class="hero text-white text-center animate__animated animate__zoomInDown">
     <div class="hero-text">
       <h1 class="display-4 fw-bold">Mis Solicitudes</h1>
@@ -120,13 +81,6 @@
     </table>
   </div>
 </main>
-<footer class="bg-dark text-white mt-5 pt-4 pb-3">
-  <div class="container text-center animate__animated animate__fadeInUp">
-    <img th:src="@{/image/fondo.webp}" alt="Ilustración del servicio" class="img-fluid my-3 rounded shadow-sm" width="600">
-    <p class="mb-0">Cuidamos tu hogar como si fuera el nuestro.</p>
-    <p class="text-muted small">© 2025 Servitec - Todos los derechos reservados</p>
-  </div>
-  <script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
-</footer>
+<footer th:replace="~{page-templates :: footer}"></footer>
 </body>
 </html>

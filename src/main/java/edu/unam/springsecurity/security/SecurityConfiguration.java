@@ -5,16 +5,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -22,7 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -50,12 +48,12 @@ public class SecurityConfiguration {
                         .requestMatchers(
                                 "/auth/**",              // Para login/refresh JWT
                                 "/registro", "/registroTecnico","/plantilla_registro","/spring/**", // Registro público si aplica
-                                "/", "/index", "/login", "/favicon.ico",
+                                "/", "/index", "/login", "/login_sesion", "/login_success_handler", "/login_failure_handler", "/favicon.ico",
                                 "/css/**", "/js/**", "/image/**", "/bootstrap/**", "/iconos/**", "/tema/**"
                         ).permitAll()
 
                         // Rutas por rol
-                        .requestMatchers("/user", "/user/**").hasRole("USER")
+                        .requestMatchers("/user", "/user/**", "/usuario").hasRole("USER")
                         .requestMatchers("/admin", "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/tecnico", "/tecnico/**").hasRole("TECNICO")
 
@@ -71,7 +69,8 @@ public class SecurityConfiguration {
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                 )
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Para soporte de login con sesión (form login y controlador custom)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 // Añadir filtro de autenticación JWT antes del filtro de autenticación por formulario
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -80,10 +79,9 @@ public class SecurityConfiguration {
 
 
 
-    // No encriptado (solo desarrollo)
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     // Usuario admin en memoria
@@ -107,10 +105,10 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:8090"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization","Content-Type"));
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedOrigins(Collections.singletonList("http://localhost:8090"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        config.setExposedHeaders(Collections.singletonList("Authorization"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

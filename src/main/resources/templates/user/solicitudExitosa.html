@@ -66,7 +66,11 @@
 </head>
 <body>
 
-<main class="contenedor-exito">
+<header>
+  <div th:replace="~{page-templates :: navbar}"></div>
+</header>
+
+<main class="contenedor-exito anim-fade-slide">
   <h3 class="text-success mb-3">¡Tu solicitud fue agendada exitosamente!</h3>
 
   <p>Recibirás un correo con la confirmación y detalles del técnico.</p>
@@ -83,6 +87,8 @@
     <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
   </svg>
 </main>
+
+<footer th:replace="~{page-templates :: footer}"></footer>
 
 </body>
 </html>

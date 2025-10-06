@@ -1,0 +1,11 @@
+# CODEOWNERS — Metodología Prompt Mentor
+# Referencia: AGENTS.md (TODO "Documentar propietarios por carpeta")
+# Se asume que @rodrigo coordina todo el repositorio; ajustar si se suman responsables por dominio.
+
+*                                   @rodrigo
+/src/                               @rodrigo
+/docs/                              @rodrigo
+/Metodologia_Prompt_Mentor/         @rodrigo
+/scripts/                           @rodrigo
+/docker-compose.yml                 @rodrigo
+/Makefile                           @rodrigo

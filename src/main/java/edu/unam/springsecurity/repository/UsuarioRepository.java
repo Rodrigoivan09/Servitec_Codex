@@ -10,6 +10,7 @@ import java.util.List;
 public interface UsuarioRepository extends CrudRepository<Usuario, Integer> {
     Usuario findByCorreoAndContrasena(String correo, String contrasena);
     Usuario findByCorreo(String correo);
+    Usuario findByNombre(String nombre);
     Usuario findByTelefono(String telefono);
     List<Usuario> findAll();
 

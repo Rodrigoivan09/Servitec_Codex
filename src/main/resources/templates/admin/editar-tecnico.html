@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Editar Técnico - Servitec</title>
@@ -45,37 +45,7 @@
 <body>
 
 <header>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg">
-    <div class="container">
-      <a th:href="@{/admin}" class="navbar-brand d-flex align-items-center">
-        <img class="rounded-circle me-2" th:src="@{/image/logo.webp}" alt="Servitec Logo" width="50" height="50">
-        <span class="fs-4">Panel Admin</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="menu">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="gestionDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Gestión</a>
-            <ul class="dropdown-menu blur-effect" aria-labelledby="gestionDropdown">
-              <li><a class="dropdown-item" th:href="@{/admin/usuarios}">Usuarios</a></li>
-              <li><a class="dropdown-item" th:href="@{/admin/tecnicos}">Técnicos</a></li>
-              <li><a class="dropdown-item" th:href="@{/admin/servicios}">Servicios</a></li>
-              <li><a class="dropdown-item" th:href="@{/admin/evaluaciones}">Evaluaciones</a></li>
-            </ul>
-          </li>
-          <li class="nav-item"><a th:href="@{/admin/estadisticas}" class="nav-link">Estadísticas</a></li>
-          <li sec:authorize="isAuthenticated()" class="nav-item">
-            <form th:action="@{/logout}" method="post" style="display:inline;">
-              <button type="submit" class="nav-link btn btn-link text-danger p-0" style="text-decoration: none;">Cerrar sesión</button>
-            </form>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <div th:replace="~{page-templates :: navbar}"></div>
 
   <section id="hero" class="hero text-white d-flex align-items-center justify-content-center text-center"
            style="background-image: url('/image/bg-techs.webp');">
@@ -156,14 +126,7 @@
   </div>
 </main>
 
-<footer class="bg-dark text-white mt-5 pt-4 pb-3">
-  <div class="container text-center">
-    <img th:src="@{/image/fondo.webp}" alt="Ilustración del servicio" class="img-fluid my-3 rounded shadow-sm" width="600">
-    <p class="mb-0">Cuidamos tu hogar como si fuera el nuestro.</p>
-    <p class="text-muted small">© 2025 Servitec - Todos los derechos reservados</p>
-  </div>
-  <script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
-</footer>
+<footer th:replace="~{page-templates :: footer}"></footer>
 
 </body>
 </html>

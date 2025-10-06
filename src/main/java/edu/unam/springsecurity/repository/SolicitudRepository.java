@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface SolicitudRepository extends JpaRepository<Solicitud, Integer> {
     List<Solicitud> findByUsuarioId(Integer idUsuario);
+    List<Solicitud> findByTecnicoId(Integer idTecnico);
 }

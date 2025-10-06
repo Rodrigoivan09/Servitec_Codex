@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Panel Técnico - Servitec</title>
+  <link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+  <link th:href="@{/iconos/bootstrap-icons.css}" rel="stylesheet">
+  <link th:href="@{/tema/miestilo.css}" rel="stylesheet">
+</head>
+<body>
+<header th:replace="~{page-templates :: navbar}"></header>
+
+<main class="container my-4 animate__animated animate__fadeIn">
+  <div class="shadow-lg p-4 bg-body-tertiary rounded">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">Panel de Técnico</h2>
+      <span class="text-muted">Bienvenido, <strong th:text="${tecnico != null ? tecnico.nombre : 'Técnico'}">Técnico</strong></span>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center"><i class="bi bi-list-task fs-2 me-3 text-primary"></i>
+              <div>
+                <div class="text-muted">Solicitudes</div>
+                <div class="fs-4" th:text="${totalSolicitudes}">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center"><i class="bi bi-hourglass-split fs-2 me-3 text-warning"></i>
+              <div>
+                <div class="text-muted">Pendientes</div>
+                <div class="fs-4" th:text="${pendientes}">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center"><i class="bi bi-play-circle fs-2 me-3 text-info"></i>
+              <div>
+                <div class="text-muted">En curso</div>
+                <div class="fs-4" th:text="${enCurso}">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center"><i class="bi bi-check2-circle fs-2 me-3 text-success"></i>
+              <div>
+                <div class="text-muted">Completadas</div>
+                <div class="fs-4" th:text="${completadas}">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4"/>
+
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white">
+            <strong><i class="bi bi-briefcase me-2"></i>Mis servicios</strong>
+            <a class="btn btn-sm btn-outline-secondary float-end" th:href="@{/tecnico/servicios}">Ver todos</a>
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush" th:if="${#lists.isEmpty(servicios)}">
+              <li class="list-group-item text-muted">Sin servicios configurados</li>
+            </ul>
+            <ul class="list-group list-group-flush" th:if="${!#lists.isEmpty(servicios)}">
+              <li class="list-group-item" th:each="s : ${servicios}" th:text="${s.nombreServicio}">Servicio</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white">
+            <strong><i class="bi bi-stars me-2"></i>Últimas evaluaciones</strong>
+            <a class="btn btn-sm btn-outline-secondary float-end" th:href="@{/tecnico/evaluaciones}">Ver todas</a>
+          </div>
+          <div class="card-body">
+            <ul class="list-group list-group-flush" th:if="${#lists.isEmpty(evaluaciones)}">
+              <li class="list-group-item text-muted">Aún no tienes evaluaciones</li>
+            </ul>
+            <ul class="list-group list-group-flush" th:if="${!#lists.isEmpty(evaluaciones)}">
+              <li class="list-group-item" th:each="e : ${evaluaciones}">
+                <span class="me-2" th:text="${e.calificacion} + '★'"></span>
+                <span class="text-muted" th:text="${e.comentarios}">Comentario</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 text-end">
+      <a class="btn btn-primary" th:href="@{/tecnico/solicitudes}"><i class="bi bi-list-check me-1"></i> Ver solicitudes</a>
+      <a class="btn btn-outline-secondary" th:href="@{/tecnico/perfil}"><i class="bi bi-person-gear me-1"></i> Mi perfil</a>
+    </div>
+  </div>
+</main>
+
+<footer th:replace="~{page-templates :: footer}"></footer>
+<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
+

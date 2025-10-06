@@ -9,7 +9,6 @@ import edu.unam.springsecurity.model.*;
 import edu.unam.springsecurity.repository.*;
 import edu.unam.springsecurity.service.TecnicoService;
 import edu.unam.springsecurity.service.UserService;
-import edu.unam.springsecurity.service.UserServiceImpl;
 import edu.unam.springsecurity.util.Archivos;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +18,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static edu.unam.springsecurity.util.Archivos.obtenerExtension;
 
@@ -86,14 +86,18 @@ public class AdminController {
                                         .average()
                                         .orElse(0.0) : 0.0,
                         t.getEvaluaciones() != null ?
-                                t.getEvaluaciones().stream().map(e -> new EvaluacionDTO(e.getId(), e.getComentarios(), e.getCalificacion())).toList()
-                                : List.of(),
+                                t.getEvaluaciones().stream()
+                                        .map(e -> new EvaluacionDTO(e.getId(), e.getComentarios(), e.getCalificacion()))
+                                        .collect(Collectors.toList())
+                                : Collections.emptyList(),
                         t.getServicios() != null ?
-                                t.getServicios().stream().map(s -> new ServicioDTO(s.getId(), s.getNombreServicio(), s.getDescripcion(), s.getTarifa().getTarifaBase()))
-                                        .toList() : List.of(),
+                                t.getServicios().stream()
+                                        .map(s -> new ServicioDTO(s.getId(), s.getNombreServicio(), s.getDescripcion(), s.getTarifa().getTarifaBase()))
+                                        .collect(Collectors.toList())
+                                : Collections.emptyList(),
                         t.getEstado()
                 ))
-                .toList();
+                .collect(Collectors.toList());
 
         model.addAttribute("tecnicos", tecnicoDTOs);
         model.addAttribute("tecnico", new Tecnico());
@@ -183,7 +187,7 @@ public class AdminController {
         }
 
         // Conservar contraseña si está vacía
-        if (tecnicoActualizado.getContrasena() == null || tecnicoActualizado.getContrasena().isBlank()) {
+        if (!StringUtils.hasText(tecnicoActualizado.getContrasena())) {
             tecnicoActualizado.setContrasena(existente.getContrasena());
         }
 
@@ -316,7 +320,7 @@ public class AdminController {
         List<Usuario> usuarios = usuarioRepository.findAll(); // o tu servicio
         List<UsuarioDTO> usuarioDTOs = usuarios.stream()
                 .map(u -> new UsuarioDTO(u.getId(), u.getNombre(), u.getCorreo(), u.getTelefono(), u.getDireccion()))
-                .toList();
+                .collect(Collectors.toList());
 
         model.addAttribute("usuarios", usuarioDTOs);
         return "admin/usuarios";
@@ -360,7 +364,7 @@ public class AdminController {
         }
 
         // Si la contraseña se deja vacía, conserva la anterior
-        if (usuarioActualizado.getContrasena() == null || usuarioActualizado.getContrasena().isBlank()) {
+        if (!StringUtils.hasText(usuarioActualizado.getContrasena())) {
             usuarioActualizado.setContrasena(existente.getContrasena());
         }
 

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-	  xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="es">
+	  xmlns:th="https://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="es">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<title>Spring Boot UNAM</title>
+    <title>Servitec</title>
 	<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
-	<link th:href="@{/bootstrap/css/animate.min.css}" rel="stylesheet">
+    <link th:href="@{/bootstrap/css/animate.min.css}" rel="stylesheet">
 	<link th:href="@{/iconos/bootstrap-icons.css}" rel="stylesheet">
 	<link th:href="@{/tema/miestilo.css}" rel="stylesheet">
 	<style>
@@ -44,7 +44,7 @@
 
 <!-- Navbar -->
 <header><div th:fragment="navbar">
-	<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg" th:with="uri=${uri}">
 		<div class="container">
 			<a href="/" class="navbar-brand d-flex align-items-center">
 				<img th:src="@{/image/logo.webp}" alt="Logo Servitec" width="50" height="50" class="rounded-circle me-2">
@@ -54,29 +54,52 @@
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse" id="menu">
-				<ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5">
-					<li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-					<li sec:authorize="hasRole('USER')" class="nav-item"><a href="/user" class="nav-link">User</a></li>
-					<li sec:authorize="hasRole('ADMIN')" class="nav-item"><a href="/admin" class="nav-link">Admin</a></li>
-					<li sec:authorize="hasRole('TECNICO')" class="nav-item"><a href="/tecnico" class="nav-link">Técnico</a></li>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5 align-items-lg-center">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link" th:classappend="${uri=='/'} ? ' active'">Home</a>
+                    </li>
 
-					<!-- Mostrar solo si NO está autenticado -->
-					<li sec:authorize="!isAuthenticated()" class="nav-item"><a href="/login" class="nav-link">Iniciar sesión</a></li>
+                    <!-- Paneles por rol -->
+                    <!-- Menú específico para usuarios finales -->
+                    <li sec:authorize="hasRole('USER')" class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userServiciosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                           th:classappend="${#strings.startsWith(uri,'/user')} ? ' active'">
+                            Servicios
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end blur-effect" aria-labelledby="userServiciosDropdown">
+                            <li><a class="dropdown-item" href="/user/plomeros">Plomería</a></li>
+                            <li><a class="dropdown-item" href="/user/electricistas">Instalaciones Eléctricas</a></li>
+                            <li><a class="dropdown-item" href="/user/electrodomesticos">Reparación de Electrodomésticos</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/user/solicitudes">Mis Solicitudes</a></li>
+                            <li><a class="dropdown-item" href="/user/pagos">Mis Pagos</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('TECNICO')" class="nav-item">
+                        <a href="/tecnico" class="nav-link" th:classappend="${#strings.startsWith(uri,'/tecnico')} ? ' active'">Técnico</a>
+                    </li>
+                    <li sec:authorize="hasRole('ADMIN')" class="nav-item">
+                        <a href="/admin" class="nav-link" th:classappend="${#strings.startsWith(uri,'/admin')} ? ' active'">Admin</a>
+                    </li>
 
-					<li class="nav-item">
-						<a href="/registro" class="btn btn-outline-light ms-2">Registrarse</a>
-					</li>
+                    <!-- Acceso / Registro -->
+                    <li sec:authorize="!isAuthenticated()" class="nav-item">
+                        <a href="/login" class="nav-link" th:classappend="${#strings.startsWith(uri,'/login')} ? ' active'">Iniciar sesión</a>
+                    </li>
+                    <li sec:authorize="!isAuthenticated()" class="nav-item">
+                        <a href="/registro" class="btn btn-outline-light ms-lg-2 mt-2 mt-lg-0" th:classappend="${#strings.startsWith(uri,'/registro')} ? ' active'">Registrarse</a>
+                    </li>
 
-					<!-- Mostrar si está autenticado -->
-					<li sec:authorize="isAuthenticated()" class="nav-item">
-						<form th:action="@{/logout}" method="post" style="display:inline;">
-							<button type="submit" class="nav-link btn btn-link text-white p-0" style="text-decoration: none;">Logout</button>
-						</form>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</nav>
+                    <!-- Logout cuando está autenticado -->
+                    <li sec:authorize="isAuthenticated()" class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-light">Salir</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 </div></header>
 
 

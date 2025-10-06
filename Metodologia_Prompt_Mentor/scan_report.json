@@ -1,0 +1,683 @@
+{
+  "root": "/home/rodrigo/Documents/HCD_private/backend",
+  "languages": [
+    "python"
+  ],
+  "frameworks": [
+    "django",
+    "fastapi",
+    "flask"
+  ],
+  "services": [
+    {
+      "name": "server_ia",
+      "kind": "fastapi",
+      "source": "server_ia/main.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "auth_user",
+      "kind": "fastapi",
+      "source": "auth_user/main.py",
+      "ports": [
+        8060
+      ],
+      "notes": []
+    },
+    {
+      "name": "validator_employee",
+      "kind": "fastapi",
+      "source": "validator_employee/main.py",
+      "ports": [
+        8040
+      ],
+      "notes": []
+    },
+    {
+      "name": "validator_employee",
+      "kind": "fastapi",
+      "source": "validator_employee/auth3.py",
+      "ports": [
+        8045
+      ],
+      "notes": []
+    },
+    {
+      "name": "server_cat_nom024",
+      "kind": "fastapi",
+      "source": "server_cat_nom024/main.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "server_cat_gobi_salud",
+      "kind": "fastapi",
+      "source": "server_cat_gobi_salud/main.py",
+      "ports": [
+        8000
+      ],
+      "notes": []
+    },
+    {
+      "name": "server_file",
+      "kind": "fastapi",
+      "source": "server_file/main.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "server_email",
+      "kind": "fastapi",
+      "source": "server_email/main.py",
+      "ports": [
+        8030
+      ],
+      "notes": []
+    },
+    {
+      "name": "server_catalog",
+      "kind": "fastapi",
+      "source": "server_catalog/main.py",
+      "ports": [
+        8010
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/texto.py",
+      "ports": [
+        8006
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scanID.py",
+      "ports": [
+        5000
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/dom.py",
+      "ports": [
+        8070
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/formularios.py",
+      "ports": [
+        8006
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/respaldo_scannerRTC.py",
+      "ports": [
+        8600
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/cropImage.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/recibeCURP.py",
+      "ports": [
+        8010
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scannRTC.py",
+      "ports": [
+        8600
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/CFE.py",
+      "ports": [
+        8014
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/test.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/noticias.py",
+      "ports": [
+        8090
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/CFEtest.py",
+      "ports": [
+        8016
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/curpMejorado.py",
+      "ports": [
+        8008
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/filtro.py",
+      "ports": [
+        5000
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/infoPersonal.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/texto5.py",
+      "ports": [
+        8020
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/direccion.py",
+      "ports": [
+        8009
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/texto2.py",
+      "ports": [
+        8020
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/curp.py",
+      "ports": [
+        8007
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scannDocument.py",
+      "ports": [
+        8600
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/curp2.py",
+      "ports": [
+        8008
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/luz.py",
+      "ports": [
+        8016
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/texto3.py",
+      "ports": [
+        8021
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scannRTC2.py",
+      "ports": [
+        8601
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/consultarCURP.py",
+      "ports": [
+        8007
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scanner.py",
+      "ports": [
+        5000
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/luz2.py",
+      "ports": [
+        8016
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/completo.py",
+      "ports": [
+        8007
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scanner2.py",
+      "ports": [
+        8600
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/texto4.py",
+      "ports": [
+        8020
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scannRTCdocument.py",
+      "ports": [
+        8603
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/curpINE.py",
+      "ports": [
+        8007
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scannerNuevo.py",
+      "ports": [
+        5500
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "fastapi",
+      "source": "scrapper_data/mejora.py",
+      "ports": [
+        8013
+      ],
+      "notes": []
+    },
+    {
+      "name": "scrapper_data",
+      "kind": "flask",
+      "source": "scrapper_data/scann.py",
+      "ports": [
+        8600
+      ],
+      "notes": []
+    },
+    {
+      "name": "server_data",
+      "kind": "fastapi",
+      "source": "server_data/main.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "scripts",
+      "kind": "fastapi",
+      "source": "Metodologia_Prompt_Mentor/scripts/auto_onboarding_scan.py",
+      "ports": [
+        5000,
+        8040
+      ],
+      "notes": []
+    },
+    {
+      "name": "measurement_service",
+      "kind": "fastapi",
+      "source": "scrapper_data/measurement_service/main.py",
+      "ports": [
+        8070
+      ],
+      "notes": []
+    },
+    {
+      "name": "test",
+      "kind": "fastapi",
+      "source": "scrapper_data/test/testFoto.py",
+      "ports": [
+        8002
+      ],
+      "notes": []
+    },
+    {
+      "name": "test",
+      "kind": "fastapi",
+      "source": "scrapper_data/test/testINE.py",
+      "ports": [
+        8003
+      ],
+      "notes": []
+    },
+    {
+      "name": "fastapi",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/background.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "fastapi",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/datastructures.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "fastapi",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/routing.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "fastapi",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/applications.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "fastapi",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/exceptions.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "fastapi",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/param_functions.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "security",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/security/oauth2.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "security",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/security/http.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "security",
+      "kind": "fastapi",
+      "source": "scrapper_data/.env10/lib/python3.10/site-packages/fastapi/security/api_key.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "security",
+      "kind": "fastapi",
+      "source": "server_data/infrastructure/service/fastapi/security/upload_documentation.py",
+      "ports": [],
+      "notes": []
+    },
+    {
+      "name": "deps",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "scrapper_deps",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "validator_employee",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8040
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "auth_user",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8060
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_catalog",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8010
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_cat_gobi_salud",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8000
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_cat_nom024",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8050
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_email",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8030
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_data",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8000
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_ia",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8100
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "server_file",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8020
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "scrapper_curp2",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8008
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "scrapper_scannrtc",
+      "kind": "compose",
+      "source": "docker-compose.yml",
+      "ports": [
+        8600
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    },
+    {
+      "name": "auth_user",
+      "kind": "compose",
+      "source": "auth_user/docker-compose.yml",
+      "ports": [
+        8060
+      ],
+      "notes": [
+        "definido en docker-compose"
+      ]
+    }
+  ],
+  "docker": {
+    "dockerfiles": [
+      "server_ia/Dockerfile",
+      "auth_user/Dockerfile",
+      "validator_employee/Dockerfile",
+      "server_cat_nom024/Dockerfile",
+      "server_cat_gobi_salud/Dockerfile",
+      "server_file/Dockerfile",
+      "server_email/Dockerfile",
+      "server_catalog/Dockerfile",
+      "scrapper_data/Dockerfile.scannrtc",
+      "scrapper_data/Dockerfile.curp2",
+      "server_data/Dockerfile"
+    ],
+    "compose": [
+      "docker-compose.yml",
+      "auth_user/docker-compose.yml"
+    ],
+    "kubernetes": []
+  },
+  "reverse_proxies": [],
+  "notes": []
+}

@@ -48,6 +48,9 @@ public class Tecnico implements Serializable {
     @Column(name = "certificacion")
     private String rutaCertificacion;
 
+    @Column(name = "foto_perfil")
+    private String rutaFotoPerfil;
+
     //@PasswordSegura
     @Column(name = "contrasena", nullable = false, length = 255)
     private String contrasena;

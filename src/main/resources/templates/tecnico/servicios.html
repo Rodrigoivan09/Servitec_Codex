@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Mis servicios - Técnico</title>
+  <link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+  <link th:href="@{/iconos/bootstrap-icons.css}" rel="stylesheet">
+  <link th:href="@{/tema/miestilo.css}" rel="stylesheet">
+</head>
+<body>
+<header th:replace="~{page-templates :: navbar}"></header>
+
+<main class="container my-4">
+  <div class="shadow-lg p-4 bg-body-tertiary rounded">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">Mis servicios</h2>
+      <a class="btn btn-outline-secondary" th:href="@{/tecnico}"><i class="bi bi-arrow-left"></i> Panel</a>
+    </div>
+
+    <ul class="list-group list-group-flush" th:if="${#lists.isEmpty(servicios)}">
+      <li class="list-group-item text-muted">No tienes servicios asignados.</li>
+    </ul>
+    <ul class="list-group list-group-flush" th:if="${!#lists.isEmpty(servicios)}">
+      <li class="list-group-item d-flex justify-content-between align-items-center" th:each="s : ${servicios}">
+        <div>
+          <div class="fw-semibold" th:text="${s.nombreServicio}">Servicio</div>
+          <small class="text-muted" th:text="${s.descripcion}">Descripción</small>
+        </div>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<footer th:replace="~{page-templates :: footer}"></footer>
+<script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
+

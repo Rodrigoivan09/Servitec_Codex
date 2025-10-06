@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security" lang="es">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -38,6 +38,7 @@
 
 
   </style>
+    
 </head>
 
 <script th:if="${mensaje}">
@@ -48,33 +49,11 @@
 
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-lg">
-  <div class="container">
-    <a href="/" class="navbar-brand d-flex align-items-center">
-      <img th:src="@{/image/logo.webp}" alt="Logo Servitec" width="50" height="50" class="rounded-circle me-2">
-      <span class="fs-4">SERVITEC</span>
-    </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="menu">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fs-5">
-        <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-        <li sec:authorize="!isAuthenticated()" class="nav-item"><a href="/login" class="nav-link">Iniciar sesión</a></li>
-        <li sec:authorize="!isAuthenticated()" class="nav-item"><a href="/registro" class="btn btn-outline-light ms-2">Registrarse</a></li>
-        <li sec:authorize="isAuthenticated()" class="nav-item">
-          <form th:action="@{/logout}" method="post" style="display:inline;">
-            <button type="submit" class="nav-link btn btn-link text-white p-0" style="text-decoration: none;">Logout</button>
-          </form>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
+<!-- Navbar compartido -->
+<header th:replace="~{page-templates :: navbar}"></header>
 
 <!-- Formulario -->
-<main class="container text-center shadow-lg p-4 mt-5 bg-body-tertiary rounded" style="max-width: 600px;">
+<main class="container text-center shadow-lg p-4 mt-5 bg-body-tertiary rounded container-form anim-fade-slide">
   <!-- Animación de mensaje de éxito -->
   <div th:if="${mensaje}" class="alert alert-success alert-animated text-center mt-3">
     <h4 class="mb-0" th:text="${mensaje}">¡Registro exitoso!</h4>
@@ -162,14 +141,8 @@
   </div>
 </main>
 
-<!-- Footer -->
-<footer class="text-center mt-5">
-  <div class="container text-center mt-4">
-    <img th:src="@{/image/fondo.webp}" class="img-fluid rounded mb-2" alt="Fondo ilustrativo" />
-    <p class="text-muted">Cuidamos tu hogar como si fuera el nuestro.</p>
-  </div>
-  <script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
-</footer>
+<!-- Footer compartido -->
+<footer th:replace="~{page-templates :: footer}"></footer>
 
 <!-- Scripts -->
 <script>
