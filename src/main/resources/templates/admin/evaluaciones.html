@@ -57,6 +57,7 @@
           <li class="nav-item"><a class="nav-link" th:href="@{/admin/estadisticas}">Estadísticas</a></li>
           <li sec:authorize="isAuthenticated()" class="nav-item">
             <form th:action="@{/logout}" method="post" style="display:inline;">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
               <button type="submit" class="nav-link btn btn-link text-danger p-0">Cerrar sesión</button>
             </form>
           </li>
@@ -126,6 +127,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <form th:action="@{/admin/evaluaciones/guardar}" method="post" th:object="${evaluacion}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Calificación</label>

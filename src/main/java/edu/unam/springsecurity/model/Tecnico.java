@@ -10,14 +10,16 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"categorias", "evaluaciones", "servicios"})
+@ToString(exclude = {"categorias", "evaluaciones", "servicios", "disponibilidades"})
 
-@Entity(name = "tecnicos")
+@Entity
+@Table(name = "Tecnicos")
 public class Tecnico implements Serializable {
 
     @Id
@@ -79,6 +81,15 @@ public class Tecnico implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoTecnico estado = EstadoTecnico.DISPONIBLE;
+
+    @Column(name = "disponible_ahora")
+    private Boolean disponibleAhora = Boolean.FALSE;
+
+    @Column(name = "notas_disponibilidad", length = 500)
+    private String notasDisponibilidad;
+
+    @OneToMany(mappedBy = "tecnico", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<TecnicoDisponibilidad> disponibilidades = new ArrayList<>();
 
 
 }

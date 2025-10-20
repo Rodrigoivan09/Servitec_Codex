@@ -91,6 +91,7 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm animate__animated animate__fadeIn blur-effect" aria-labelledby="perfilDropdown">
                             <li sec:authorize="isAuthenticated()" class="nav-item">
                                 <form th:action="@{/logout}" method="post" style="display:inline;">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                     <button type="submit"
                                             class="nav-link btn btn-link text-danger p-0"
                                             style="text-decoration: none;">

@@ -3,10 +3,13 @@
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/Administrador.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/UsuarioRepository.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/service/ServicioServiceImpl.java
+/home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/TecnicoDisponibilidadRepository.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/ServicioRepository.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/service/ServicioService.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/Tarifa.java
+/home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/TecnicoDisponibilidad.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/TecnicoRepository.java
+/home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/SolicitudAdjuntoRepository.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/controller/UserController.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/LoginRequest.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/service/AdminService.java
@@ -38,6 +41,7 @@
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/security/JwtTokenUtil.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/service/UserDetailsServiceImpl.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/service/TecnicoServiceImpl.java
+/home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/SolicitudAdjunto.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/AdministradorRepository.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/controller/AuthController.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/Tecnico.java
@@ -45,11 +49,13 @@
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/Categoria.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/dto/AuthRequest.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/repository/EvaluacionRepository.java
+/home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/enums/MotivoDeclinacion.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/PagoSimulado.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/controller/HelloWorldController.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/enums/EstadoSolicitud.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/security/SecurityConfiguration.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/dto/ServicioDTO.java
+/home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/enums/TipoAtencion.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/SpringSecurityApplication.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/Servicio.java
 /home/rodrigo/Documents/Servitec_Codex/src/main/java/edu/unam/springsecurity/model/Evaluacion.java

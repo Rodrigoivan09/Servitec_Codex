@@ -12,47 +12,243 @@
 <header th:replace="~{page-templates :: navbar}"></header>
 
 <main class="container my-4">
-  <div class="shadow-lg p-4 bg-body-tertiary rounded">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="mb-0">Solicitudes asignadas</h2>
-      <a class="btn btn-outline-secondary" th:href="@{/tecnico}"><i class="bi bi-arrow-left"></i> Panel</a>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Gestión de solicitudes</h2>
+    <a class="btn btn-outline-secondary" th:href="@{/tecnico}"><i class="bi bi-arrow-left"></i> Panel</a>
+  </div>
+
+  <div class="alert alert-success" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+  <div class="alert alert-info" th:if="${mensajeInfo}" th:text="${mensajeInfo}"></div>
+  <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Disponibilidad</h5>
+          <span class="badge" th:classappend="${tecnico.disponibleAhora} ? ' bg-success' : ' bg-secondary'"
+                th:text="${tecnico.disponibleAhora} ? 'Recibiendo solicitudes inmediatas' : 'No disponible ahora'}"></span>
+        </div>
+        <div class="card-body">
+          <form class="row gy-2 align-items-center" th:action="@{/tecnico/disponibilidad/ahora}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="disponible" th:value="${!tecnico.disponibleAhora}">
+            <div class="col-md-8">
+              <label for="notas" class="form-label">Notas para solicitud inmediata</label>
+              <textarea id="notas" name="notas" class="form-control" rows="2" placeholder="Ej. Disponible hasta las 18:00" th:text="${tecnico.notasDisponibilidad}"></textarea>
+            </div>
+            <div class="col-md-4 d-grid">
+              <button type="submit" class="btn" th:classappend="${tecnico.disponibleAhora} ? ' btn-danger' : ' btn-success'">
+                <i class="bi" th:classappend="${tecnico.disponibleAhora} ? ' bi-pause-circle' : ' bi-play-circle'"></i>
+                <span th:text="${tecnico.disponibleAhora} ? 'Pausar solicitudes inmediatas' : 'Activar solicitudes inmediatas'}"></span>
+              </button>
+            </div>
+          </form>
+
+          <hr class="my-4">
+          <h6 class="mb-3">Ventanas de agenda</h6>
+          <form class="row g-2 align-items-end mb-3" th:action="@{/tecnico/disponibilidad}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="col-md-4">
+              <label for="dia" class="form-label">Día</label>
+              <select class="form-select" id="dia" name="dia" required>
+                <option value="" disabled selected>Selecciona</option>
+                <option th:each="diaOpt : ${T(java.time.DayOfWeek).values()}"
+                        th:value="${diaOpt}"
+                        th:text="${#strings.capitalize(diaOpt.name().toLowerCase())}"></option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="horaInicio" class="form-label">Hora inicio</label>
+              <input type="time" class="form-control" id="horaInicio" name="horaInicio" required>
+            </div>
+            <div class="col-md-3">
+              <label for="horaFin" class="form-label">Hora fin</label>
+              <input type="time" class="form-control" id="horaFin" name="horaFin" required>
+            </div>
+            <div class="col-md-2 d-grid">
+              <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Añadir</button>
+            </div>
+          </form>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+              <tr>
+                <th>Día</th>
+                <th>Horario</th>
+                <th class="text-center">Estado</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:if="${#lists.isEmpty(disponibilidades)}">
+                <td colspan="4" class="text-center text-muted">No se ha configurado disponibilidad.</td>
+              </tr>
+              <tr th:each="disp : ${disponibilidades}">
+                <td th:text="${#strings.capitalize(disp.dia.name().toLowerCase())}">Lunes</td>
+                <td>
+                  <span th:text="${disp.horaInicio}"></span>
+                  <span> - </span>
+                  <span th:text="${disp.horaFin}"></span>
+                </td>
+                <td class="text-center">
+                  <span class="badge" th:classappend="${disp.activo} ? ' bg-success' : ' bg-secondary'"
+                        th:text="${disp.activo} ? 'Activo' : 'Inactivo'"></span>
+                </td>
+                <td class="text-end">
+                  <form th:action="@{'/tecnico/disponibilidad/' + ${disp.id} + '/estado'}" method="post" class="d-inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="activo" th:value="${!disp.activo}">
+                    <button type="submit" class="btn btn-sm" th:classappend="${disp.activo} ? ' btn-outline-warning' : ' btn-outline-success'">
+                      <i class="bi" th:classappend="${disp.activo} ? ' bi-pause' : ' bi-check-circle'}"></i>
+                    </button>
+                  </form>
+                  <form th:action="@{'/tecnico/disponibilidad/' + ${disp.id} + '/eliminar'}" method="post" class="d-inline ms-1">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar este horario?');">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-striped align-middle">
-        <thead>
-        <tr>
-          <th>Folio</th>
-          <th>Cliente</th>
-          <th>Servicio</th>
-          <th>Fecha</th>
-          <th>Hora</th>
-          <th>Estado</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:if="${#lists.isEmpty(solicitudes)}">
-          <td colspan="6" class="text-center text-muted">Sin solicitudes asignadas</td>
-        </tr>
-        <tr th:each="s : ${solicitudes}">
-          <td th:text="${s.id}">1</td>
-          <td th:text="${s.usuario != null ? s.usuario.nombre : 'N/D'}">Cliente</td>
-          <td th:text="${s.servicio != null ? s.servicio.nombreServicio : 'N/D'}">Servicio</td>
-          <td th:text="${s.fecha}">2025-01-01</td>
-          <td th:text="${s.horaLlegada}">09:00</td>
-          <td>
-            <span class="badge" th:classappend="${s.estado=='Pendiente'} ? ' bg-warning text-dark' : (${s.estado=='Completado' or s.estado=='Completada'} ? ' bg-success' : ' bg-info')"
-                  th:text="${s.estado}">Pendiente</span>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <h5 class="mb-0">Solicitudes pendientes</h5>
+        </div>
+        <div class="card-body">
+          <div th:if="${#lists.isEmpty(pendientes)}" class="text-center text-muted">
+            No hay solicitudes en espera.
+          </div>
+          <div class="row g-3" th:if="${!#lists.isEmpty(pendientes)}">
+            <div class="col-12" th:each="solicitud : ${pendientes}">
+              <div class="card border-warning">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>Folio </strong><span th:text="${solicitud.id}"></span>
+                    <span class="badge bg-warning text-dark ms-2" th:text="${solicitud.tipoAtencion == T(edu.unam.springsecurity.enums.TipoAtencion).INMEDIATA ? 'Inmediata' : 'Programada'}"></span>
+                  </div>
+                  <span class="text-muted" th:text="${#temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy')}"></span>
+                </div>
+                <div class="card-body">
+                  <div class="row g-2">
+                    <div class="col-md-4">
+                      <h6 class="text-uppercase text-muted">Cliente</h6>
+                      <p class="mb-1" th:text="${solicitud.usuario != null ? solicitud.usuario.nombre : 'N/D'}"></p>
+                      <small class="text-muted" th:text="${solicitud.direccion}"></small>
+                    </div>
+                    <div class="col-md-4">
+                      <h6 class="text-uppercase text-muted">Servicio</h6>
+                      <p class="mb-1" th:text="${solicitud.servicio != null ? solicitud.servicio.nombreServicio : 'N/D'}"></p>
+                      <small class="text-muted" th:text="${solicitud.detallesAdicionales != null ? solicitud.detallesAdicionales : 'Sin detalles adicionales'}"></small>
+                    </div>
+                    <div class="col-md-4">
+                      <h6 class="text-uppercase text-muted">Programación</h6>
+                      <p class="mb-1" th:text="${#temporals.format(solicitud.fechaProgramada, 'dd/MM/yyyy')}"></p>
+                      <p class="mb-1" th:text="${solicitud.horaProgramada}"></p>
+                      <span class="badge bg-info" th:if="${solicitud.requiereVideollamada}">Solicita videollamada</span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3" th:if="${!#lists.isEmpty(solicitud.adjuntos)}">
+                    <h6 class="text-uppercase text-muted">Adjuntos</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                      <a class="btn btn-sm btn-outline-secondary" th:each="adj : ${solicitud.adjuntos}" th:href="${adj.rutaArchivo}" target="_blank">
+                        <i class="bi bi-paperclip"></i>
+                        <span th:text="${adj.nombreArchivo}"></span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="row mt-4">
+                    <div class="col-md-6">
+                      <form th:action="@{'/tecnico/solicitudes/' + ${solicitud.id} + '/aceptar'}" method="post" class="border rounded p-3 bg-light-subtle">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="form-check form-switch mb-2">
+                          <input class="form-check-input" type="checkbox" role="switch" id="contactoConfirmado-[[${solicitud.id}]]" name="contactoConfirmado" value="true">
+                          <label class="form-check-label" th:for="${'contactoConfirmado-' + solicitud.id}">Ya contacté al cliente</label>
+                        </div>
+                        <div class="mb-2">
+                          <label class="form-label" th:for="${'observaciones-' + solicitud.id}">Observaciones</label>
+                          <textarea class="form-control" th:id="${'observaciones-' + solicitud.id}" name="observaciones" rows="2" placeholder="Material necesario, costos extras, etc."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Aceptar solicitud</button>
+                      </form>
+                    </div>
+                    <div class="col-md-6">
+                      <form th:action="@{'/tecnico/solicitudes/' + ${solicitud.id} + '/declinar'}" method="post" class="border rounded p-3 bg-light-subtle">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="mb-2">
+                          <label class="form-label" th:for="${'motivo-' + solicitud.id}">Motivo</label>
+                          <select class="form-select" th:id="${'motivo-' + solicitud.id}" name="motivo" required>
+                            <option value="" disabled selected>Selecciona</option>
+                            <option th:each="motivo : ${motivosDeclinacion}" th:value="${motivo}" th:text="${#strings.capitalize(motivo.name().toLowerCase().replace('_',' '))}"></option>
+                          </select>
+                        </div>
+                        <div class="mb-2">
+                          <label class="form-label" th:for="${'detalle-' + solicitud.id}">Detalle</label>
+                          <textarea class="form-control" th:id="${'detalle-' + solicitud.id}" name="detalle" rows="2" placeholder="Describe brevemente la razón"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger w-100"><i class="bi bi-x-circle"></i> Declinar solicitud</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <h5 class="mb-0">Agenda próxima</h5>
+        </div>
+        <div class="card-body">
+          <div th:if="${#lists.isEmpty(agenda)}" class="text-center text-muted">No hay servicios programados.</div>
+          <div class="table-responsive" th:if="${!#lists.isEmpty(agenda)}">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+              <tr>
+                <th>Folio</th>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="solicitud : ${agenda}">
+                <td th:text="${solicitud.id}"></td>
+                <td th:text="${solicitud.usuario != null ? solicitud.usuario.nombre : 'N/D'}"></td>
+                <td th:text="${solicitud.servicio != null ? solicitud.servicio.nombreServicio : 'N/D'}"></td>
+                <td th:text="${#temporals.format(solicitud.fechaProgramada, 'dd/MM/yyyy')}"></td>
+                <td th:text="${solicitud.horaProgramada}"></td>
+                <td>
+                  <span class="badge bg-primary" th:text="${solicitud.estado}"></span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  </main>
+</main>
 
 <footer th:replace="~{page-templates :: footer}"></footer>
 <script th:src="@{/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>
-

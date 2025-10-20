@@ -10,10 +10,11 @@ import edu.unam.springsecurity.repository.TecnicoRepository;
 import edu.unam.springsecurity.repository.UsuarioRepository;
 import edu.unam.springsecurity.service.*;
 import edu.unam.springsecurity.util.Archivos;
-import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,43 +123,61 @@ public class HomeController {
 		return "registroTecnico"; // <-- este debe ser el nombre del HTML sin la extensión
 	}
 
-	@PostMapping("/registroTecnico")
-	public String registrarTecnico(@Valid @ModelAttribute("tecnico") Tecnico tecnico,
-								   BindingResult result,
-								   @RequestParam("efirma") MultipartFile efirma,
-								   @RequestParam("certificacion") MultipartFile certificacion,
-								   Model model) {
+	    @PostMapping("/registroTecnico")
+	    public String registrarTecnico(@Valid @ModelAttribute("tecnico") Tecnico tecnico,
+									   BindingResult result,
+									   @RequestParam("efirma") MultipartFile efirma,
+									   @RequestParam("certificacion") MultipartFile certificacion,
+									   Model model) {
 
-		if (result.hasErrors()) {
-			model.addAttribute("error", "Por favor corrige los errores del formulario.");
+			if (result.hasErrors()) {
+				model.addAttribute("error", "Por favor corrige los errores del formulario.");
+				return "registroTecnico";
+			}
+
+			if (tecnicoService.existePorCorreo(tecnico.getCorreo())) {
+				model.addAttribute("error", "Este correo ya está registrado.");
+				return "registroTecnico";
+			}
+
+			if (efirma == null || efirma.isEmpty() || certificacion == null || certificacion.isEmpty()) {
+				model.addAttribute("error", "Debe adjuntar la eFirma y la certificación.");
+				return "registroTecnico";
+			}
+
+			String extensionEfirma = obtenerExtension(efirma.getOriginalFilename());
+			String extensionCert = obtenerExtension(certificacion.getOriginalFilename());
+			if (!StringUtils.hasText(extensionEfirma) || !StringUtils.hasText(extensionCert)) {
+				model.addAttribute("error", "Los archivos deben incluir una extensión válida.");
+				return "registroTecnico";
+			}
+
+			try {
+				// Guardar técnico para obtener el ID
+				tecnico.setRutaEfirma("");
+				tecnico.setRutaCertificacion("");
+				tecnicoService.guardar(tecnico);
+
+				String nombreEfirma = tecnico.getId() + "_efirma." + extensionEfirma;
+				String nombreCert = tecnico.getId() + "_certificacion." + extensionCert;
+
+				Archivos.almacenarConNombre(efirma, RUTA_EFIRMA, nombreEfirma);
+				Archivos.almacenarConNombre(certificacion, RUTA_CERTIFICACION, nombreCert);
+
+				tecnico.setRutaEfirma("/" + RUTA_EFIRMA + "/" + nombreEfirma);
+				tecnico.setRutaCertificacion("/" + RUTA_CERTIFICACION + "/" + nombreCert);
+				tecnicoService.guardar(tecnico);
+
+				model.addAttribute("mensaje", "Técnico registrado exitosamente");
+			} catch (RuntimeException ex) {
+				log.error("Error al almacenar archivos para el técnico", ex);
+				if (tecnico.getId() != null) {
+					tecnicoService.eliminar(tecnico.getId());
+				}
+				model.addAttribute("error", "No fue posible guardar la documentación. Intenta nuevamente.");
+			}
 			return "registroTecnico";
 		}
-
-		if (tecnicoService.existePorCorreo(tecnico.getCorreo())) {
-			model.addAttribute("error", "Este correo ya está registrado.");
-			return "registroTecnico";
-		}
-
-		// 1️⃣ Guardar técnico para obtener el ID
-		tecnico.setRutaEfirma(""); // si los campos en BD permiten null, puedes omitir
-		tecnico.setRutaCertificacion("");
-		tecnicoService.guardar(tecnico); // Ahora ya tiene ID
-
-		// 2️⃣ Guardar los archivos con el ID como nombre
-		String nombreEfirma = tecnico.getId() + "_efirma." + obtenerExtension(efirma.getOriginalFilename());
-		String nombreCert = tecnico.getId() + "_certificacion." + obtenerExtension(certificacion.getOriginalFilename());
-
-		String rutaEfirma = Archivos.almacenarConNombre(efirma, RUTA_EFIRMA, nombreEfirma);
-		String rutaCert = Archivos.almacenarConNombre(certificacion, RUTA_CERTIFICACION, nombreCert);
-
-		// 3️⃣ Asignar rutas reales y guardar nuevamente
-		tecnico.setRutaEfirma("/" + RUTA_EFIRMA + "/" + nombreEfirma);
-		tecnico.setRutaCertificacion("/" + RUTA_CERTIFICACION + "/" + nombreCert);
-		tecnicoService.guardar(tecnico);
-
-		model.addAttribute("mensaje", "Técnico registrado exitosamente");
-		return "registroTecnico";
-	}
 
 
 //	@GetMapping("/admin")
@@ -189,16 +208,20 @@ public class HomeController {
 	private UsuarioRepository usuarioRepository;
 
     @PostMapping("/login_sesion")
-    public String loginPersonalizado(@RequestParam String username,
-                                    @RequestParam String password,
-                                    HttpSession session,
-                                    HttpServletRequest request,
-                                    RedirectAttributes redirectAttributes) {
+	    public String loginPersonalizado(@RequestParam String username,
+	                                    @RequestParam String password,
+	                                    HttpSession session,
+	                                    HttpServletRequest request,
+	                                    RedirectAttributes redirectAttributes) {
 
-        log.info("[LOGIN] intento de acceso username='{}' ip={} ua={}",
-                username,
-                request.getRemoteAddr(),
-                request.getHeader("User-Agent"));
+			String safeUsername = sanitizeForLog(username);
+			String clientIp = sanitizeForLog(request.getRemoteAddr());
+			String userAgent = sanitizeForLog(request.getHeader("User-Agent"));
+
+	        log.info("[LOGIN] intento de acceso username='{}' ip={} ua={}",
+	                safeUsername,
+	                clientIp,
+	                userAgent);
 
 		// 1. Validar si es administrador
 		Administrador admin = administradorRepository.findByCorreo(username);
@@ -223,9 +246,9 @@ public class HomeController {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
 
-            log.info("[LOGIN] ADMIN autenticado username='{}' -> /admin", username);
-            return "redirect:/admin";
-        }
+	            log.info("[LOGIN] ADMIN autenticado username='{}' -> /admin", safeUsername);
+	            return "redirect:/admin";
+	        }
 
 		// 2. Validar si es usuario
 		Usuario usuario = usuarioRepository.findByCorreo(username);
@@ -249,9 +272,9 @@ public class HomeController {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
 
-            log.info("[LOGIN] USER autenticado username='{}' -> /usuario", username);
-            return "redirect:/usuario";
-        }
+	            log.info("[LOGIN] USER autenticado username='{}' -> /usuario", safeUsername);
+	            return "redirect:/usuario";
+	        }
 
 		// 3. Validar si es técnico
 		Tecnico tecnico = tecnicoRepository.findByCorreo(username);
@@ -275,15 +298,15 @@ public class HomeController {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
 
-            log.info("[LOGIN] TECNICO autenticado username='{}' -> /tecnico", username);
-            return "redirect:/tecnico";
-        }
+	            log.info("[LOGIN] TECNICO autenticado username='{}' -> /tecnico", safeUsername);
+	            return "redirect:/tecnico";
+	        }
 
 		// Si ninguno coincide
-        log.warn("[LOGIN] fallo de autenticación username='{}'", username);
-        redirectAttributes.addFlashAttribute("error", "Credenciales inválidas");
-        return "redirect:/login";
-    }
+	        log.warn("[LOGIN] fallo de autenticación username='{}'", safeUsername);
+	        redirectAttributes.addFlashAttribute("error", "Credenciales inválidas");
+	        return "redirect:/login";
+	    }
 
 
 
@@ -294,36 +317,42 @@ public class HomeController {
 
 
 
-	@PostMapping("/login")
-	public String iniciarSesion(@RequestParam String username,
-						@RequestParam String password,
-						HttpSession session,
-						RedirectAttributes redirectAttributes) {
+	    @PostMapping("/login")
+		public String iniciarSesion(@RequestParam String username,
+							@RequestParam String password,
+							HttpSession session,
+							RedirectAttributes redirectAttributes) {
 
-		System.out.println("📩 Correo recibido: " + username);
-		System.out.println("🔐 Contraseña recibida: " + password);
+			String safeUsername = sanitizeForLog(username);
+			log.debug("[LOGIN-FORM] intento usuario='{}'", safeUsername);
 
-		Usuario usuario = userService.validarLogin(username, password);
-		if (usuario != null) {
-			session.setAttribute("usuarioActual", usuario);
-			session.setAttribute("idUsuario", usuario.getId());
-			return "redirect:/spring/login_inicio";
-		} else {
-			redirectAttributes.addFlashAttribute("error", "Credenciales inválidas");
-			return "redirect:/login";  // esta es tu ruta actual de formulario
+			Usuario usuario = userService.validarLogin(username, password);
+			if (usuario != null) {
+				session.setAttribute("usuarioActual", usuario);
+				session.setAttribute("idUsuario", usuario.getId());
+				return "redirect:/spring/login_inicio";
+			} else {
+				redirectAttributes.addFlashAttribute("error", "Credenciales inválidas");
+				return "redirect:/login";  // esta es tu ruta actual de formulario
+			}
 		}
-	}
 
 	@PostMapping("/login_success_handler")
 	public String loginSuccessHandler() {
-		System.out.println("Logging user login success...");
+		log.debug("[LOGIN] handler de éxito ejecutado");
 		return "index";
 	}
 
 	@PostMapping("/login_failure_handler")
 	public String loginFailureHandler() {
-		System.out.println("Login failure handler....");
+		log.debug("[LOGIN] handler de fallo ejecutado");
 		return "login";
 	}
 
+	private String sanitizeForLog(String rawValue) {
+		if (!StringUtils.hasText(rawValue)) {
+			return "";
+		}
+		return rawValue.replace("\r", "").replace("\n", "").trim();
+	}
 }

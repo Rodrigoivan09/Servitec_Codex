@@ -12,6 +12,8 @@ import edu.unam.springsecurity.service.UserService;
 import edu.unam.springsecurity.util.Archivos;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,6 +30,8 @@ import static edu.unam.springsecurity.util.Archivos.obtenerExtension;
 
 @Controller
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
 //    private final HomeService homeService;
       private final UserService userService;
@@ -134,6 +138,11 @@ public class AdminController {
             return "redirect:/admin/tecnicos";
         }
 
+        if (efirma == null || efirma.isEmpty() || certificacion == null || certificacion.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Debes adjuntar la eFirma y la certificación.");
+            return "redirect:/admin/tecnicos";
+        }
+
         try {
             // Guardar técnico sin rutas
             tecnico.setRutaEfirma("");
@@ -141,12 +150,19 @@ public class AdminController {
             tecnicoService.guardar(tecnico);  // Genera ID
 
             // Nombrar archivos
-            String nombreEfirma = tecnico.getId() + "_efirma." + obtenerExtension(efirma.getOriginalFilename());
-            String nombreCert = tecnico.getId() + "_certificacion." + obtenerExtension(certificacion.getOriginalFilename());
+            String extensionEfirma = obtenerExtension(efirma.getOriginalFilename());
+            String extensionCert = obtenerExtension(certificacion.getOriginalFilename());
+            if (!StringUtils.hasText(extensionEfirma) || !StringUtils.hasText(extensionCert)) {
+                redirectAttributes.addFlashAttribute("error", "Los archivos deben contar con una extensión válida.");
+                tecnicoService.eliminar(tecnico.getId());
+                return "redirect:/admin/tecnicos";
+            }
+            String nombreEfirma = tecnico.getId() + "_efirma." + extensionEfirma;
+            String nombreCert = tecnico.getId() + "_certificacion." + extensionCert;
 
             // Guardar archivos
-            String rutaEfirma = Archivos.almacenarConNombre(efirma, RUTA_EFIRMA, nombreEfirma);
-            String rutaCert = Archivos.almacenarConNombre(certificacion, RUTA_CERTIFICACION, nombreCert);
+            Archivos.almacenarConNombre(efirma, RUTA_EFIRMA, nombreEfirma);
+            Archivos.almacenarConNombre(certificacion, RUTA_CERTIFICACION, nombreCert);
 
             // Asignar rutas y guardar nuevamente
             tecnico.setRutaEfirma("/" + RUTA_EFIRMA + "/" + nombreEfirma);
@@ -154,8 +170,12 @@ public class AdminController {
             tecnicoService.guardar(tecnico);
 
             redirectAttributes.addFlashAttribute("mensajeExito", "Técnico registrado correctamente.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al guardar técnico: " + e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Error al almacenar documentos para el técnico", e);
+            if (tecnico.getId() != null) {
+                tecnicoService.eliminar(tecnico.getId());
+            }
+            redirectAttributes.addFlashAttribute("error", "No fue posible guardar la documentación del técnico. Intenta nuevamente.");
         }
 
         return "redirect:/admin/tecnicos";
@@ -195,16 +215,26 @@ public class AdminController {
         if (efirma == null || efirma.isEmpty()) {
             tecnicoActualizado.setRutaEfirma(existente.getRutaEfirma());
         } else {
-            String nombreEfirma = tecnicoActualizado.getId() + "_efirma." + obtenerExtension(efirma.getOriginalFilename());
-            String rutaEfirma = Archivos.almacenarConNombre(efirma, "uploads/efirma", nombreEfirma);
+            String extensionEfirma = obtenerExtension(efirma.getOriginalFilename());
+            if (!StringUtils.hasText(extensionEfirma)) {
+                redirectAttributes.addFlashAttribute("error", "La eFirma debe tener una extensión válida.");
+                return "redirect:/admin/tecnicos";
+            }
+            String nombreEfirma = tecnicoActualizado.getId() + "_efirma." + extensionEfirma;
+            Archivos.almacenarConNombre(efirma, "uploads/efirma", nombreEfirma);
             tecnicoActualizado.setRutaEfirma("/uploads/efirma/" + nombreEfirma);
         }
 
         if (certificacion == null || certificacion.isEmpty()) {
             tecnicoActualizado.setRutaCertificacion(existente.getRutaCertificacion());
         } else {
-            String nombreCert = tecnicoActualizado.getId() + "_certificacion." + obtenerExtension(certificacion.getOriginalFilename());
-            String rutaCert = Archivos.almacenarConNombre(certificacion, "uploads/certificacion", nombreCert);
+            String extensionCert = obtenerExtension(certificacion.getOriginalFilename());
+            if (!StringUtils.hasText(extensionCert)) {
+                redirectAttributes.addFlashAttribute("error", "La certificación debe tener una extensión válida.");
+                return "redirect:/admin/tecnicos";
+            }
+            String nombreCert = tecnicoActualizado.getId() + "_certificacion." + extensionCert;
+            Archivos.almacenarConNombre(certificacion, "uploads/certificacion", nombreCert);
             tecnicoActualizado.setRutaCertificacion("/uploads/certificacion/" + nombreCert);
         }
 

@@ -33,7 +33,14 @@
               <dt class="col-sm-4">Dirección</dt>
               <dd class="col-sm-8" th:text="${tecnico != null ? tecnico.direccion : 'N/D'}">dir</dd>
               <dt class="col-sm-4">Estado</dt>
-              <dd class="col-sm-8"><span class="badge bg-success">DISPONIBLE</span></dd>
+              <dd class="col-sm-8">
+                <span class="badge" th:classappend="${tecnico != null && tecnico.estado.name() == 'DISPONIBLE'} ? ' bg-success' : ' bg-secondary'"
+                      th:text="${tecnico != null ? tecnico.estado : 'N/A'}">DISPONIBLE</span>
+                <span class="badge ms-2" th:classappend="${tecnico != null && tecnico.disponibleAhora} ? ' bg-primary' : ' bg-secondary'"
+                      th:text="${tecnico != null && tecnico.disponibleAhora ? 'Aceptando urgencias' : 'Sin urgencias'}"></span>
+              </dd>
+              <dt class="col-sm-4">Notas</dt>
+              <dd class="col-sm-8" th:text="${tecnico != null && tecnico.notasDisponibilidad != null ? tecnico.notasDisponibilidad : 'Sin notas'}"></dd>
             </dl>
           </div>
         </div>
@@ -56,6 +63,7 @@
               <div th:if="${tecnico == null || tecnico.rutaFotoPerfil == null}" class="text-muted">Sin foto</div>
             </div>
             <form th:action="@{/tecnico/foto}" method="post" enctype="multipart/form-data">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
               <div class="input-group">
                 <input type="file" class="form-control" name="foto" accept="image/*" required>
                 <button class="btn btn-primary" type="submit"><i class="bi bi-upload"></i> Subir</button>
@@ -67,8 +75,36 @@
       </div>
     </div>
 
-    <div class="alert alert-info mt-4 mb-0">
-      Edición de perfil y actualización de documentos se implementará en una iteración siguiente.
+    <div class="mt-4">
+      <h5>Disponibilidad registrada</h5>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead class="table-light">
+          <tr>
+            <th>Día</th>
+            <th>Horario</th>
+            <th>Estado</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:if="${#lists.isEmpty(disponibilidades)}">
+            <td colspan="3" class="text-muted text-center">Configura tus horarios desde la sección de solicitudes.</td>
+          </tr>
+          <tr th:each="disp : ${disponibilidades}">
+            <td th:text="${#strings.capitalize(disp.dia.name().toLowerCase())}"></td>
+            <td>
+              <span th:text="${disp.horaInicio}"></span>
+              <span> - </span>
+              <span th:text="${disp.horaFin}"></span>
+            </td>
+            <td>
+              <span class="badge" th:classappend="${disp.activo} ? ' bg-success' : ' bg-secondary'"
+                    th:text="${disp.activo ? 'Activo' : 'Inactivo'}"></span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </main>

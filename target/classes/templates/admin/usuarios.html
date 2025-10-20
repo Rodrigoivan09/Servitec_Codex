@@ -109,6 +109,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <form th:action="@{/admin/usuarios/guardar}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <div class="modal-body">
           <div class="mb-3">
             <label for="nombre" class="form-label">Nombre</label>

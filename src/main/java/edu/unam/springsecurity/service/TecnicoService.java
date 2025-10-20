@@ -1,11 +1,12 @@
 package edu.unam.springsecurity.service;
 
 import edu.unam.springsecurity.model.Tecnico;
-import jakarta.validation.Valid;
+import edu.unam.springsecurity.model.TecnicoDisponibilidad;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 
 @Service
@@ -21,4 +22,16 @@ public interface TecnicoService {
     List<Tecnico> obtenerTecnicosPorCategoria(String nombreCategoria);
 
     Object getText();
+
+    Tecnico actualizarDisponibilidadInmediata(Integer tecnicoId, boolean disponible, String notas);
+
+    TecnicoDisponibilidad registrarDisponibilidad(Integer tecnicoId, DayOfWeek dia, LocalTime horaInicio, LocalTime horaFin);
+
+    void actualizarEstadoDisponibilidad(Integer disponibilidadId, Integer tecnicoId, boolean activo);
+
+    void eliminarDisponibilidad(Integer disponibilidadId, Integer tecnicoId);
+
+    List<TecnicoDisponibilidad> listarDisponibilidades(Integer tecnicoId);
+
+    Tecnico buscarTecnicoDisponibleInmediato(Integer servicioId);
 }

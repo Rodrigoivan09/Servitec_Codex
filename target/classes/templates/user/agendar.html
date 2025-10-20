@@ -49,7 +49,15 @@
 <main class="container py-4 d-flex justify-content-center">
     <div class="shadow-lg p-4 bg-body-tertiary rounded" style="max-width: 900px; width: 100%;">
         <h2 class="mb-4 text-center">Confirmación de Solicitud</h2>
-        <form th:action="@{/user/guardarSolicitud}" method="post">
+        <div class="alert alert-danger" th:if="${mensajeError}" th:text="${mensajeError}"></div>
+        <div class="alert alert-info" th:if="${mensajeInfo}" th:text="${mensajeInfo}"></div>
+        <div class="alert alert-success" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+        <div th:if="${autoAsignado}" class="alert alert-info">
+            Seleccionamos automáticamente al técnico <strong th:text="${tecnico.nombre}"></strong> para atender tu solicitud inmediata.
+            Puedes continuar o cambiar a la opción programada si prefieres agendar en otro horario.
+        </div>
+        <form th:action="@{/user/guardarSolicitud}" method="post" enctype="multipart/form-data">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" name="idTecnico" th:value="${tecnico.id}">
             <input type="hidden" name="idServicio" th:value="${servicio.id}">
             <input type="hidden" name="idUsuario" th:value="${idUsuario}">
@@ -72,15 +80,61 @@
                 <label for="direccion" class="form-label">Dirección de servicio</label>
                 <input type="text" name="direccion" id="direccion" class="form-control" placeholder="Ingresa la dirección" required>
             </div>
+
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="fechaSolicitud" class="form-label">Fecha</label>
-                    <input type="date" name="fechaSolicitud" id="fechaSolicitud" class="form-control" required>
+                    <label class="form-label">Tipo de atención</label>
+                    <select name="tipoAtencion" id="tipoAtencion" class="form-select" onchange="toggleProgramacion()">
+                        <option th:each="tipo : ${tiposAtencion}"
+                                th:value="${tipo}"
+                                th:text="${tipo.name() == 'INMEDIATA' ? 'Inmediata' : 'Programada'}"
+                                th:selected="${tipo.name() == 'INMEDIATA'}">
+                        </option>
+                    </select>
                 </div>
                 <div class="col-md-6">
-                    <label for="horaLlegada" class="form-label">Hora</label>
-                    <input type="time" name="horaLlegada" id="horaLlegada" class="form-control" required>
+                    <label class="form-label">¿Requieres videollamada?</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="requiereVideollamada" name="requiereVideollamada" value="true">
+                        <label class="form-check-label" for="requiereVideollamada">Permitir videollamada previa para aclarar dudas</label>
+                    </div>
                 </div>
+            </div>
+
+            <div class="row mb-3" id="contenedorProgramacion">
+                <div class="col-md-6">
+                    <label for="fechaProgramada" class="form-label">Fecha deseada</label>
+                    <input type="date" name="fechaProgramada" id="fechaProgramada" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label for="horaProgramada" class="form-label">Hora preferida</label>
+                    <input type="time" name="horaProgramada" id="horaProgramada" class="form-control">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="detallesAdicionales" class="form-label">Detalles del servicio</label>
+                <textarea name="detallesAdicionales" id="detallesAdicionales" class="form-control" rows="3" placeholder="Describe el área o materiales requeridos"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="adjuntos" class="form-label">Fotos o videos del área (opcional)</label>
+                <input type="file" class="form-control" id="adjuntos" name="adjuntos" multiple accept="image/*,video/mp4,video/quicktime">
+                <small class="text-muted">Formatos permitidos: imágenes o videos cortos (máx. 100 MB).</small>
+            </div>
+
+            <div class="mb-3" th:if="${disponibilidades != null} and ${disponibilidades.size()} > 0">
+                <label class="form-label">Horarios disponibles del técnico</label>
+                <ul class="list-group">
+                    <li class="list-group-item" th:each="disp : ${disponibilidades}" th:classappend="${!disp.activo} ? 'disabled text-muted'">
+                        <span th:text="${#strings.capitalize(disp.dia.name().toLowerCase())}"></span>
+                        <span>•</span>
+                        <span th:text="${disp.horaInicio}"></span>
+                        <span>-</span>
+                        <span th:text="${disp.horaFin}"></span>
+                        <span class="badge bg-secondary ms-2" th:if="${!disp.activo}">No disponible</span>
+                    </li>
+                </ul>
             </div>
             <h5 class="mt-4">Datos de pago</h5>
             <div class="row mb-3">
@@ -105,5 +159,20 @@
     </div>
 </main>
 <footer th:replace="~{page-templates :: footer}"></footer>
+<script>
+    function toggleProgramacion() {
+        const select = document.getElementById('tipoAtencion');
+        const contenedor = document.getElementById('contenedorProgramacion');
+        const fecha = document.getElementById('fechaProgramada');
+        const hora = document.getElementById('horaProgramada');
+        if (select && contenedor) {
+            const esProgramada = select.value === 'PROGRAMADA';
+            contenedor.style.display = esProgramada ? 'flex' : 'none';
+            fecha.required = esProgramada;
+            hora.required = esProgramada;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', toggleProgramacion);
+</script>
 </body>
 </html>

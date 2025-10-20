@@ -5,6 +5,7 @@ import edu.unam.springsecurity.dto.ServicioDTO;
 import edu.unam.springsecurity.dto.SolicitudDTO;
 import edu.unam.springsecurity.dto.TecnicoDTO;
 import edu.unam.springsecurity.enums.EstadoSolicitud;
+import edu.unam.springsecurity.enums.TipoAtencion;
 import edu.unam.springsecurity.model.*;
 import edu.unam.springsecurity.repository.UsuarioRepository;
 import edu.unam.springsecurity.service.*;
@@ -20,10 +21,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -186,6 +191,7 @@ public class UserController {
     @GetMapping("/user/agendar/{idTecnico}/{idServicio}")
     public String mostrarFormularioAgendar(@PathVariable Integer idTecnico,
                                            @PathVariable Integer idServicio,
+                                           @RequestParam(value = "auto", required = false) String auto,
                                            HttpSession session,
                                            Model model) {
 
@@ -195,12 +201,11 @@ public class UserController {
         //Usuario usuario = (Usuario) session.getAttribute("usuarioActual");
 
 
-        // También puedes verificar estos datos si quieres
-        System.out.println("👷 Técnico seleccionado: " + tecnico.getNombre());
-        System.out.println("🔧 Servicio seleccionado: " + servicio.getNombreServicio());
-
         model.addAttribute("tecnico", tecnico);
         model.addAttribute("servicio", servicio);
+        model.addAttribute("tiposAtencion", TipoAtencion.values());
+        model.addAttribute("disponibilidades", tecnico != null ? tecnicoService.listarDisponibilidades(tecnico.getId()) : java.util.Collections.emptyList());
+        model.addAttribute("autoAsignado", auto != null);
         //model.addAttribute("idUsuario", usuario.getId()); // 👈 esto es CLAVE
 
         return "user/agendar";
@@ -217,6 +222,7 @@ public class UserController {
 
     @PostMapping("/user/guardarSolicitud")
     public String guardarSolicitud(@ModelAttribute SolicitudDTO solicitudDTO,
+                                   @RequestParam(value = "adjuntos", required = false) MultipartFile[] adjuntos,
                                    RedirectAttributes redirectAttributes) {
 
         // Obtener técnico y servicio
@@ -237,10 +243,37 @@ public class UserController {
         solicitud.setTecnico(tecnico);
         solicitud.setServicio(servicio);
         solicitud.setDireccion(solicitudDTO.getDireccion());
-        solicitud.setHoraLlegada(solicitudDTO.getHoraLlegada());
-        solicitud.setEstado(String.valueOf(EstadoSolicitud.PENDIENTE));
+        solicitud.setEstado(EstadoSolicitud.PENDIENTE);
         solicitud.setFechaSolicitud(LocalDate.now());
-        solicitud.setFecha(solicitud.getFechaSolicitud());
+
+        TipoAtencion tipoAtencion = TipoAtencion.INMEDIATA;
+        if (solicitudDTO.getTipoAtencion() != null) {
+            try {
+                tipoAtencion = TipoAtencion.valueOf(solicitudDTO.getTipoAtencion().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+                tipoAtencion = TipoAtencion.INMEDIATA;
+            }
+        }
+        solicitud.setTipoAtencion(tipoAtencion);
+
+        if (tipoAtencion == TipoAtencion.PROGRAMADA) {
+            if (solicitudDTO.getFechaProgramada() == null || solicitudDTO.getHoraProgramada() == null) {
+                redirectAttributes.addFlashAttribute("error", "Debes seleccionar fecha y hora para agendar el servicio.");
+                return "redirect:/user/agendar/" + tecnico.getId() + "/" + servicio.getId();
+            }
+            if (solicitudDTO.getFechaProgramada().isBefore(LocalDate.now())) {
+                redirectAttributes.addFlashAttribute("error", "La fecha programada no puede ser anterior al día de hoy.");
+                return "redirect:/user/agendar/" + tecnico.getId() + "/" + servicio.getId();
+            }
+            solicitud.setFechaProgramada(solicitudDTO.getFechaProgramada());
+            solicitud.setHoraProgramada(solicitudDTO.getHoraProgramada());
+        } else {
+            solicitud.setFechaProgramada(LocalDate.now());
+            solicitud.setHoraProgramada(LocalTime.now());
+        }
+
+        solicitud.setDetallesAdicionales(solicitudDTO.getDetallesAdicionales());
+        solicitud.setRequiereVideollamada(Boolean.TRUE.equals(solicitudDTO.getRequiereVideollamada()));
         solicitud.setUsuario(usuario);
 
         // Crear y asociar el pago
@@ -254,10 +287,29 @@ public class UserController {
         solicitud.setPago(pago);
         pago.setSolicitud(solicitud);
 
-        solicitudService.guardar(solicitud);
+        solicitudService.guardarConAdjuntos(solicitud, adjuntos);
 
         redirectAttributes.addFlashAttribute("mensajeExito", "¡Solicitud registrada con éxito!");
         return "user/solicitudExitosa";
+    }
+
+    @GetMapping("/user/servicio/{idServicio}/inmediato")
+    public String solicitarServicioInmediato(@PathVariable Integer idServicio,
+                                             RedirectAttributes redirectAttributes) {
+        Servicio servicio = servicioService.buscarPorId(idServicio);
+        if (servicio == null) {
+            redirectAttributes.addFlashAttribute("mensajeError", "El servicio seleccionado no existe.");
+            return redirigirACategoria(null);
+        }
+
+        Tecnico tecnicoDisponible = tecnicoService.buscarTecnicoDisponibleInmediato(idServicio);
+        if (tecnicoDisponible == null) {
+            redirectAttributes.addFlashAttribute("mensajeError", "No hay técnicos disponibles para atender este servicio de inmediato. Intenta agendar en otro horario.");
+            return redirigirACategoria(servicio);
+        }
+
+        redirectAttributes.addFlashAttribute("mensajeInfo", "Asignamos automáticamente al técnico " + tecnicoDisponible.getNombre() + " para tu solicitud inmediata.");
+        return "redirect:/user/agendar/" + tecnicoDisponible.getId() + "/" + servicio.getId() + "?auto=1";
     }
 
 
@@ -298,6 +350,26 @@ public class UserController {
 
         model.addAttribute("pagos", pagos);
         return "user/pagos"; // Asegúrate de que coincida con tu ruta de template
+    }
+
+
+    private String redirigirACategoria(Servicio servicio) {
+        if (servicio != null && servicio.getCategoria() != null) {
+            String nombre = servicio.getCategoria().getNombreCategoria();
+            if (nombre != null) {
+                String nombreNormalizado = nombre.trim().toLowerCase();
+                if (nombreNormalizado.contains("plom")) {
+                    return "redirect:/user/plomeros";
+                }
+                if (nombreNormalizado.contains("electrodom")) {
+                    return "redirect:/user/electrodomesticos";
+                }
+                if (nombreNormalizado.contains("electric")) {
+                    return "redirect:/user/electricistas";
+                }
+            }
+        }
+        return "redirect:/usuario";
     }
 
 

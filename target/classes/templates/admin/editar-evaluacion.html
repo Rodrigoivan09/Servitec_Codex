@@ -30,6 +30,7 @@
 </header>
 <main class="container mt-5">
   <form th:action="@{/admin/evaluaciones/actualizar}" method="post">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
     <input type="hidden" th:field="*{evaluacion.id}" name="id"/>
     <div class="mb-3">
       <label class="form-label">Calificación</label>

@@ -67,6 +67,7 @@
         </div>
         <div class="card-body">
           <form th:action="@{/admin/tecnicos/actualizar}" method="post" enctype="multipart/form-data" th:object="${tecnico}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <input type="hidden" th:field="*{id}" name="id"/>
 
             <div class="mb-3">

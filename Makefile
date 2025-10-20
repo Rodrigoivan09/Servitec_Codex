@@ -100,11 +100,12 @@ endif
 
 ifeq ($(STACK_LABEL),java-maven)
   TOOL_LABEL := Maven/Java
-  SETUP_CMD ?= $(MVNW) $(MVNW_FLAGS) -DskipTests dependency:go-offline
-  BUILD_CMD ?= $(MVNW) $(MVNW_FLAGS) -DskipTests compile
-  LINT_CMD ?= $(MVNW) $(MVNW_FLAGS) -DskipTests verify
-  TEST_CMD ?= $(MVNW) $(MVNW_FLAGS) test
-  RUN_CMD ?= $(MVNW) spring-boot:run
+  JAVA_BOOTSTRAP ?= ./scripts/setup_java.sh
+  SETUP_CMD ?= $(JAVA_BOOTSTRAP) && $(MVNW) $(MVNW_FLAGS) -DskipTests dependency:go-offline
+  BUILD_CMD ?= $(JAVA_BOOTSTRAP) && $(MVNW) $(MVNW_FLAGS) -DskipTests compile
+  LINT_CMD ?= $(JAVA_BOOTSTRAP) && $(MVNW) $(MVNW_FLAGS) -DskipTests verify
+  TEST_CMD ?= $(JAVA_BOOTSTRAP) && $(MVNW) $(MVNW_FLAGS) test
+  RUN_CMD ?= $(JAVA_BOOTSTRAP) && $(MVNW) spring-boot:run
   CLEAN_CMD ?= $(MVNW) $(MVNW_FLAGS) clean
 endif
 
@@ -284,7 +285,7 @@ endef
 # -----------------------------------------------------------------------------
 # Objetivos principales (agnósticos al stack)
 # -----------------------------------------------------------------------------
-.PHONY: help context setup build lint test run format clean
+.PHONY: help context setup build lint test run format clean ensure-db
 
 help:
 	@echo "Objetivos principales:" \
@@ -318,7 +319,7 @@ lint:
 test:
 	$(call run-or-warn,$(TEST_CMD),Ejecución de pruebas,TEST)
 
-run:
+run: ensure-db
 	$(call run-or-warn,$(RUN_CMD),Ejecución de la aplicación,RUN)
 
 format:
@@ -326,6 +327,10 @@ format:
 
 clean:
 	$(call run-or-warn,$(CLEAN_CMD),Limpieza,CLEAN)
+
+ensure-db:
+	@echo "🗄  Verificando estado de la base de datos (docker compose)..."
+	@DOCKER_HOST= DOCKER_BIN=docker COMPOSE_SUBCOMMAND=compose ./scripts/ensure_db.sh db
 
 # -----------------------------------------------------------------------------
 # Docker Compose (se reinicia siempre para evitar estados sucios)

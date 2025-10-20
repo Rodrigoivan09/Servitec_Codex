@@ -55,8 +55,11 @@
         <th>Servicio</th>
         <th>Técnico</th>
         <th>Dirección</th>
+        <th>Tipo</th>
         <th>Fecha</th>
         <th>Hora</th>
+        <th>Videollamada</th>
+        <th>Adjuntos</th>
         <th>Estado</th>
       </tr>
       </thead>
@@ -66,16 +69,31 @@
         <td th:text="${solicitud.servicio.nombreServicio}"></td>
         <td th:text="${solicitud.tecnico.nombre}"></td>
         <td th:text="${solicitud.direccion}"></td>
-        <td th:text="${#temporals.format(solicitud.fecha, 'dd/MM/yyyy')}"></td>
-        <td th:text="${solicitud.horaLlegada}"></td>
+        <td th:text="${solicitud.tipoAtencion == T(edu.unam.springsecurity.enums.TipoAtencion).INMEDIATA ? 'Inmediata' : 'Programada'}"></td>
+        <td th:text="${#temporals.format(solicitud.fechaProgramada, 'dd/MM/yyyy')}"></td>
+        <td th:text="${solicitud.horaProgramada}"></td>
         <td>
-          <span th:if="${solicitud.estado == 'PENDIENTE'}" class="badge bg-warning text-dark">Pendiente</span>
-          <span th:if="${solicitud.estado == 'CONFIRMADA'}" class="badge bg-success">Confirmada</span>
-          <span th:if="${solicitud.estado == 'CANCELADA'}" class="badge bg-danger">Cancelada</span>
+          <i class="bi" th:classappend="${solicitud.requiereVideollamada} ? ' bi-camera-video text-primary' : ' bi-camera-video-off text-muted'}"></i>
+        </td>
+        <td>
+          <div th:if="${#lists.isEmpty(solicitud.adjuntos)}" class="text-muted">-</div>
+          <div class="d-flex flex-column gap-1" th:if="${!#lists.isEmpty(solicitud.adjuntos)}">
+            <a class="btn btn-sm btn-outline-secondary" th:each="adj : ${solicitud.adjuntos}" th:href="${adj.rutaArchivo}" target="_blank">
+              <i class="bi bi-paperclip"></i>
+              <span th:text="${adj.nombreArchivo}"></span>
+            </a>
+          </div>
+        </td>
+        <td>
+          <span class="badge bg-warning text-dark" th:if="${solicitud.estado.name() == 'PENDIENTE'}">Pendiente</span>
+          <span class="badge bg-primary" th:if="${solicitud.estado.name() == 'ACEPTADA'}">Aceptada</span>
+          <span class="badge bg-success" th:if="${solicitud.estado.name() == 'COMPLETADA'}">Completada</span>
+          <span class="badge bg-danger" th:if="${solicitud.estado.name() == 'DECLINADA'}">Declinada</span>
+          <span class="badge bg-secondary" th:if="${solicitud.estado.name() == 'CANCELADA'}">Cancelada</span>
         </td>
       </tr>
       <tr th:if="${#lists.isEmpty(solicitudes)}">
-        <td colspan="7" class="text-center text-muted">No tienes solicitudes registradas.</td>
+        <td colspan="9" class="text-center text-muted">No tienes solicitudes registradas.</td>
       </tr>
       </tbody>
     </table>

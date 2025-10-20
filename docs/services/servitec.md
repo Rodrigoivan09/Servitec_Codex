@@ -92,6 +92,29 @@
   - `SPRING_CSRF_PROTECTION_DISABLED` en `SecurityConfiguration`: evaluar reactivar CSRF para rutas de formularios o aislarlas bajo endpoints específicos con tokens anti-CSRF.
 - **DAST**: el baseline autenticado queda listo para ejecutarse; revisar el artefacto `zap-baseline-report` tras la primera corrida con credenciales `SERVITEC_ZAP_USER/PASS` y registrar vulnerabilidades confirmadas.
 
+### 2025-10-09 — Endurecimiento de subida de archivos y sesiones locales
+- **Contexto inicial**: retomar los hallazgos SAST pendientes (sanitizado de archivos, inyección CRLF, CSRF) y formalizar la instalación del JDK/arranque de MariaDB para `make run`. El objetivo apunta a los KPI de mantenibilidad y seguridad de ISO/IEC 25010.
+- **Hardening de plataforma**: se generó `scripts/setup_java.sh` (`scripts/setup_java.sh:1`) que descarga/instala Amazon Corretto 21 dentro de `vendor/` y actualiza `.env` con `JAVA_HOME`. El `Makefile` ahora orquesta el bootstrap (`Makefile:57-105`) y ejecuta `scripts/ensure_db.sh` antes de `make run` para garantizar que MariaDB esté saludable (`scripts/ensure_db.sh:1-50`). Disponible también el target `ensure-db` para reutilizar el check.
+- **Mitigaciones SAST**:
+  1. `Archivos.almacenar*` valida y normaliza nombres con `StringUtils.cleanPath`, asegura que la ruta final permanezca dentro del directorio base y reemplaza escrituras manuales por `Files.copy` (`src/main/java/edu/unam/springsecurity/util/Archivos.java:15-88`).
+  2. Controladores (`HomeController`, `AdminController`, `TecnicoController`) registran únicamente valores sanitizados o identificadores internos; también se reemplazaron los `System.out` por `log.debug` para evitar filtrado de credenciales (`src/main/java/edu/unam/springsecurity/controller/HomeController.java:198-248`).
+  3. `SecurityConfiguration` reactivó CSRF con `CookieCsrfTokenRepository` e ignoró solo APIs JWT (`src/main/java/edu/unam/springsecurity/security/SecurityConfiguration.java:42-69`). Todas las plantillas HTML con `method="post"` agregan el campo oculto `_csrf` (por ejemplo `src/main/resources/templates/login.html:35`, `src/main/resources/templates/admin/tecnicos.html:59-132`).
+- **Validaciones realizadas**: `make build` y `./mvnw spotbugs:spotbugs` pasaron con éxito usando el JDK portable (`reports/spotbugs` actualizados). El arranque local vía `make run` ahora espera a MariaDB antes de compilar. Intentamos correr `docker run owasp/zap2docker-stable zap-baseline.py`, pero Docker Hub negó el pull para la imagen pública; queda documentado como acción a coordinar con credenciales del registro.
+- **Pruebas manuales**: se automatizó un flujo `curl` que obtiene el token CSRF, envía credenciales `plomero1@servitec.local/password` y verifica el dashboard técnico. El login HTML siguió redirigiendo a `/login` aunque la autenticación JWT (`/auth/login`) confirmó credenciales; posible discrepancia con la sesión Spring que amerita revisión visual en navegador.
+- **Próximas acciones**:
+  1. Ejecutar ZAP baseline una vez que el registro Docker esté accesible o se provea la imagen interna (`docs/services/servitec.md` → sección Validaciones).
+  2. Revisar manualmente en UI por qué el flujo `/login_sesion` no persiste la sesión pese a autenticar en JWT (posible interacción con CSRF recién activado).
+
+### 2025-10-09 — Workflow de solicitudes (aceptar, declinar y adjuntar evidencia)
+- **Contexto**: inspirados en Lalamove/TaskRabbit el objetivo fue permitir que el técnico controle la cola (aceptar o declinar) mientras el usuario describe el servicio con multimedia. Impacta KPI de usabilidad y mantenibilidad (ISO 25010).
+- **Modelo de datos**: se añadió telemetría de la solicitud (`src/main/java/edu/unam/springsecurity/model/Solicitud.java:20-94`) y tablas auxiliares `SolicitudAdjunto` (`src/main/java/edu/unam/springsecurity/model/SolicitudAdjunto.java:1-37`) y `TecnicoDisponibilidad` (`src/main/java/edu/unam/springsecurity/model/TecnicoDisponibilidad.java:1-40`). Flyway registra los cambios en `src/main/resources/db/migration/V6__solicitud_workflow.sql:1-37`.
+- **Servicios**: `SolicitudServiceImpl` gestiona adjuntos/estados/TTL (`src/main/java/edu/unam/springsecurity/service/SolicitudServiceImpl.java:27-143`) y ahora coordina asignaciones inmediatas con `TecnicoServiceImpl.buscarTecnicoDisponibleInmediato` (`src/main/java/edu/unam/springsecurity/service/TecnicoServiceImpl.java:86-95`). El `TecnicoController` expone los endpoints de aceptación/declinación y administración de horarios (`src/main/java/edu/unam/springsecurity/controller/TecnicoController.java:31-232`).
+- **Interfaces**: el usuario puede disparar “Solicitar ahora” desde las vistas de servicio (`src/main/resources/templates/user/plomeros.html:36-118`, `.../user/electricistas.html`, `.../user/electrodomesticos.html`) o agendar desde `src/main/resources/templates/user/agendar.html:36-170`, adjuntando evidencias. El estado enriquecido se consulta en `src/main/resources/templates/user/solicitudes.html:39-87`. El técnico administra disponibilidad y solicitudes desde `src/main/resources/templates/tecnico/solicitudes.html:19-217`; su perfil resume los horarios configurados (`src/main/resources/templates/tecnico/perfil.html:23-123`).
+- **Validaciones**: `make build` y `./mvnw spotbugs:spotbugs` ejecutados tras el refactor (SpotBugs aún reporta aviso por clases BCEL al analizar `MultipartFile`, sin fallar). Pendiente reintentar ZAP baseline cuando se habilite el pull de la imagen.
+- **Siguientes pasos**:
+  1. Integrar notificaciones (push/email) y reasignación automática cuando expire el TTL de respuesta.
+  2. Investigar proveedor WebRTC/telefonía para habilitar la videollamada solicitada y registrar la bitácora de contacto técnico-usuario.
+
 ## 4. Validaciones
 - `./mvnw -q -DskipTests compile` completó con éxito usando el JDK 21 de VS Code al exportar `JAVA_HOME` y actualizar `PATH`.
 - `./mvnw -q -DskipTests compile` también pasó utilizando Amazon Corretto 21 ubicado en `vendor/amazon-corretto-21.0.8.9.1-linux-x64`.
@@ -99,10 +122,13 @@
 - `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev` arranca correctamente tras `docker compose up db`; si el contenedor se detiene, el comando falla con `Connection refused` y debe reiniciarse la base.
 - 2025-10-06 — El job `security-scans` del workflow `Prompt Mentor CI` genera los artefactos `spotbugs-report` y `zap-baseline-report`; revisarlos en cada push/PR.
 - Cuando Flyway reporta "Found non-empty schema but no history table" o "Detected failed migration", ejecutar `docker compose down -v` seguido de `docker compose up db` y relanzar la aplicación.
+- 2025-10-09 — `make build` y `./mvnw spotbugs:spotbugs` concluyen sin hallazgos críticos gracias a `scripts/setup_java.sh`; el baseline ZAP quedó pendiente por falta de acceso a la imagen pública (`owasp/zap2docker-stable`).
+- 2025-10-09 — Flujo `curl` autenticado (obteniendo `_csrf` y cookies) confirma login exitoso contra `/auth/login` pero la ruta `/login_sesion` sigue redirigiendo a `/login`; revisar en navegador para validar sesión.
 
 ## 5. Decisiones abiertas
 - Definir estructura final de navegación para usuarios técnicos.
 - Incorporar Maven Wrapper completo o establecer instructivo para compilar con Maven instalado en el host.
+- Aplicar la migración `V6__solicitud_workflow.sql` con el JDK portable (`JAVA_HOME=vendor/amazon-corretto-21.0.8.9.1-linux-x64`) y credenciales actualizadas (`servitec_app`) para materializar `HorariosTecnicos`, `SolicitudAdjuntos` y evitar errores 500 al agendar.
 
 ## 6. Referencias
 - `Metodologia_Prompt_Mentor/STRATEGY_BITACORA_MENTOR.md`

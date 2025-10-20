@@ -14,8 +14,11 @@ public class SolicitudDTO {
     private Integer idTecnico;
     private Integer idServicio;
     private String direccion;
-    private LocalDate fecha;
-    private LocalTime horaLlegada;
+    private LocalDate fechaProgramada;
+    private LocalTime horaProgramada;
+    private String tipoAtencion;
+    private String detallesAdicionales;
+    private Boolean requiereVideollamada;
 
     // Datos de pago
     private String numeroTarjeta;
