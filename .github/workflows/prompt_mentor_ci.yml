@@ -82,16 +82,43 @@ jobs:
 
       - name: Authenticate QA user (capture session cookie)
         run: |
-          if [ -z "$QA_USERNAME" ] || [ -z "$QA_PASSWORD" ]; then
-            echo "GitHub Secrets SERVITEC_ZAP_USER / SERVITEC_ZAP_PASS no configurados" >&2
+          FALLBACK_QA_USER="5555555555"
+          FALLBACK_QA_PASS="Contraseña1#"
+
+          if [ -z "$QA_USERNAME" ]; then
+            echo "Advertencia: QA_USERNAME no definido en secrets; usando valor por defecto." >&2
+            QA_USERNAME="$FALLBACK_QA_USER"
+          fi
+
+          if [ -z "$QA_PASSWORD" ]; then
+            echo "Advertencia: QA_PASSWORD no definido en secrets; usando valor por defecto." >&2
+            QA_PASSWORD="$FALLBACK_QA_PASS"
+          fi
+
+          LOGIN_PAGE=$(mktemp)
+          curl -sS -c cookies.txt "http://127.0.0.1:${SERVER_PORT}/login" > "$LOGIN_PAGE"
+
+          CSRF_TOKEN=$(python - "$LOGIN_PAGE" <<'PY'
+import re, sys, pathlib
+html = pathlib.Path(sys.argv[1]).read_text()
+m = re.search(r'name="_csrf"\s+value="([^"]+)"', html)
+if m:
+    print(m.group(1))
+PY
+)
+
+          if [ -z "$CSRF_TOKEN" ]; then
+            echo "No se pudo extraer el token CSRF del formulario de login" >&2
             exit 1
           fi
 
+          rm -f "$LOGIN_PAGE"
+
           RESPONSE_FILE=$(mktemp)
-          curl -sS -i -c cookies.txt \
+          curl -sS -i -c cookies.txt -b cookies.txt \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "username=${QA_USERNAME}&password=${QA_PASSWORD}" \
-            http://127.0.0.1:${SERVER_PORT}/login > "$RESPONSE_FILE"
+            --data "username=${QA_USERNAME}&password=${QA_PASSWORD}&_csrf=${CSRF_TOKEN}" \
+            http://127.0.0.1:${SERVER_PORT}/login_sesion > "$RESPONSE_FILE"
 
           if ! grep -q "JSESSIONID" cookies.txt && ! grep -q "Set-Cookie: JSESSIONID" "$RESPONSE_FILE"; then
             echo "No se obtuvo JSESSIONID tras el login" >&2

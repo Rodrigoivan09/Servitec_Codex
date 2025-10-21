@@ -12,6 +12,18 @@
 
 ## 3. Bitácora pedagógica
 
+### 2025-10-21 — Pipeline de seguridad detenido por secretos faltantes
+- **Contexto inicial**: al revisar la bitácora de GitHub Actions se observó el fallo temprano del job `Security Scans (SpotBugs + ZAP)` en `prompt_mentor_ci.yml`.
+- **Hallazgo**: el paso `Authenticate QA user` aborta con el mensaje `GitHub Secrets SERVITEC_ZAP_USER / SERVITEC_ZAP_PASS no configurados` porque la validación `QA_USERNAME`/`QA_PASSWORD` queda vacía (`.github/workflows/prompt_mentor_ci.yml:38-76`).
+- **Configuración ejecutada**: 
+  1. El workflow ahora aplica credenciales por defecto `QA_USERNAME=5555555555` y `QA_PASSWORD=Contraseña1#` cuando los secretos no están definidos y, antes del POST, obtiene el token CSRF y lo envía contra `/login_sesion` (`.github/workflows/prompt_mentor_ci.yml:83-121`).
+  2. Se añadió la migración `src/main/resources/db/migration/V7__qa_admin_account.sql` para garantizar que exista un administrador con ese teléfono/contraseña y permitir el acceso a `/admin`.
+- **Acción recomendada**: crear en GitHub → `Settings > Secrets and variables > Actions` los secretos `ZAP_QA_USER` y `ZAP_QA_PASS` con estas credenciales (u otras que se prefieran) y así evitar que la contraseña quede visible en el log.
+- **Evidencia**: registro del pipeline `GitHub Secrets SERVITEC_ZAP_USER / SERVITEC_ZAP_PASS no configurados` y valores nulos de `QA_USERNAME`/`QA_PASSWORD`.
+- **Métrica impactada (ISO 25010)**: fiabilidad de la cadena CI, al impedir completar el escaneo DAST automático.
+- **Pendiente**: tras configurar los secretos o ajustar los identificadores, relanzar el workflow y anexar los resultados de SpotBugs/ZAP en la siguiente iteración de esta bitácora.
+- **Seguimiento**: documentar en esta sección el resultado del siguiente run y, si se modifica el nombre de los secretos en el YAML, actualizar la referencia de líneas.
+
 ### 2025-09-27 — Sesión en curso
 - **Contexto inicial**: Pull previo con múltiples cambios en controladores, repositorios y vistas para habilitar rol técnico.
 - **Pendientes heredados**: método `findByApellidoAndNombre` incorrecto en `UsuarioRepository`; revisar flujo de login técnico y documentación faltante.
