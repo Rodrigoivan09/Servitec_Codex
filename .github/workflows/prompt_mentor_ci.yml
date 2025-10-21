@@ -98,12 +98,14 @@ jobs:
           LOGIN_PAGE=$(mktemp)
           curl -sS -c cookies.txt "http://127.0.0.1:${SERVER_PORT}/login" > "$LOGIN_PAGE"
 
-          CSRF_TOKEN=$(python - "$LOGIN_PAGE" <<'PY'
+          CSRF_TOKEN=$(python3 - "$LOGIN_PAGE" <<'PY'
 import re, sys, pathlib
 html = pathlib.Path(sys.argv[1]).read_text()
-m = re.search(r'name="_csrf"\s+value="([^"]+)"', html)
-if m:
-    print(m.group(1))
+pattern_ordered = re.search(r'name="_csrf"[^>]*value="([^"]+)"', html)
+pattern_reversed = re.search(r'value="([^"]+)"[^>]*name="_csrf"', html)
+token = (pattern_ordered or pattern_reversed)
+if token:
+    print(token.group(1))
 PY
 )
 
