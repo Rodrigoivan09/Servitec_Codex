@@ -145,9 +145,11 @@ HTML5 / Bootstrap
 - Sesión: stateless (sin sesión de servidor); CORS habilitado con credenciales.
 
 
+
 👨‍💻 Autor
 Rodrigo Olvera
 Proyecto final – Módulo 10
+ping mentor
 ping mentor
 ping mentor
 ping mentor
