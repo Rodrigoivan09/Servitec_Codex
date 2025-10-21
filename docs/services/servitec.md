@@ -24,6 +24,12 @@
 - **Pendiente**: tras configurar los secretos o ajustar los identificadores, relanzar el workflow y anexar los resultados de SpotBugs/ZAP en la siguiente iteración de esta bitácora.
 - **Seguimiento**: documentar en esta sección el resultado del siguiente run y, si se modifica el nombre de los secretos en el YAML, actualizar la referencia de líneas.
 
+### 2025-10-21 — README expandido bajo Metodología Prompt Mentor
+- **Contexto**: el README original era conciso y repetía varias líneas del prompt base (`README.md`).
+- **Acción**: se reescribió `README.md` para incorporar una guía exhaustiva con índice, arquitectura, variables, modos de ejecución (Docker, app-dev y local), tareas del Makefile, credenciales seed (`src/main/resources/db/migration/V1__init.sql`…`V7__qa_admin_account.sql`), detalles del flujo JWT y lineamientos de bitácora/commits.
+- **Justificación pedagógica**: la Metodología Prompt Mentor exige documentación narrativa que explique por qué y cómo replicar cada procedimiento. El nuevo README actúa como onboarding autónomo, enlaza archivos críticos y refuerza métricas de mantenibilidad (ISO 25010).
+- **Pendientes**: mantener sincronía entre el README y esta bitácora; cualquier variación estructural futura debe reflejarse en `README.md` y en `Metodologia_Prompt_Mentor/CODEx_NOTES_java.md`.
+
 ### 2025-09-27 — Sesión en curso
 - **Contexto inicial**: Pull previo con múltiples cambios en controladores, repositorios y vistas para habilitar rol técnico.
 - **Pendientes heredados**: método `findByApellidoAndNombre` incorrecto en `UsuarioRepository`; revisar flujo de login técnico y documentación faltante.

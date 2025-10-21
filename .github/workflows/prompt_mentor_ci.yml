@@ -98,16 +98,7 @@ jobs:
           LOGIN_PAGE=$(mktemp)
           curl -sS -c cookies.txt "http://127.0.0.1:${SERVER_PORT}/login" > "$LOGIN_PAGE"
 
-          CSRF_TOKEN=$(python3 - "$LOGIN_PAGE" <<'PY'
-import re, sys, pathlib
-html = pathlib.Path(sys.argv[1]).read_text()
-pattern_ordered = re.search(r'name="_csrf"[^>]*value="([^"]+)"', html)
-pattern_reversed = re.search(r'value="([^"]+)"[^>]*name="_csrf"', html)
-token = (pattern_ordered or pattern_reversed)
-if token:
-    print(token.group(1))
-PY
-)
+          CSRF_TOKEN=$(python3 -c "import re, pathlib; html = pathlib.Path('$LOGIN_PAGE').read_text(); pattern = re.search(r'name=\"_csrf\"[^>]*value=\"([^\"]+)\"', html) or re.search(r'value=\"([^\"]+)\"[^>]*name=\"_csrf\"', html); print(pattern.group(1) if pattern else '')")
 
           if [ -z "$CSRF_TOKEN" ]; then
             echo "No se pudo extraer el token CSRF del formulario de login" >&2
