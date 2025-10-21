@@ -144,8 +144,10 @@ HTML5 / Bootstrap
 - Claims del token: `sub` (username), `uid` (id del usuario), `roles` (lista de roles), `username`.
 - Sesión: stateless (sin sesión de servidor); CORS habilitado con credenciales.
 
+
 👨‍💻 Autor
 Rodrigo Olvera
 Proyecto final – Módulo 10
+ping mentor
 ping mentor
 ping mentor
