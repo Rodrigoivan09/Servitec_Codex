@@ -291,6 +291,4 @@ Licencia y autoría
 
 ---
 
-
-
 ¡Listo! Con esta guía exhaustiva deberías poder clonar, ejecutar, depurar y extender Servitec con confianza, manteniendo la trazabilidad y buenas prácticas exigidas por la colaboración Codex ↔ Equipo. Recuerda siempre actualizar las bitácoras tras cada avance significativo. Felices despliegues. 🚀
