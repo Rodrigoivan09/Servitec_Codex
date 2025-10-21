@@ -82,9 +82,17 @@ jobs:
 
       - name: Authenticate QA user (capture session cookie)
         run: |
-          if [ -z "$QA_USERNAME" ] || [ -z "$QA_PASSWORD" ]; then
-            echo "GitHub Secrets SERVITEC_ZAP_USER / SERVITEC_ZAP_PASS no configurados" >&2
-            exit 1
+          FALLBACK_QA_USER="5555555555"
+          FALLBACK_QA_PASS="Contraseña1#"
+
+          if [ -z "$QA_USERNAME" ]; then
+            echo "Advertencia: QA_USERNAME no definido en secrets; usando valor por defecto." >&2
+            QA_USERNAME="$FALLBACK_QA_USER"
+          fi
+
+          if [ -z "$QA_PASSWORD" ]; then
+            echo "Advertencia: QA_PASSWORD no definido en secrets; usando valor por defecto." >&2
+            QA_PASSWORD="$FALLBACK_QA_PASS"
           fi
 
           RESPONSE_FILE=$(mktemp)

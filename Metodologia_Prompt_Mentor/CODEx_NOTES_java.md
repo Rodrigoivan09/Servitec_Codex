@@ -15,6 +15,7 @@
 - [ ] Confirmar endpoints críticos (`/`, `/login`, `/tecnico`, `/admin`) y, si se habilita Actuator, `/actuator/health`.
 
 ## Errores y soluciones comunes
+- 2025-10-21 — GitHub Actions aborta con `SERVITEC_ZAP_USER / SERVITEC_ZAP_PASS no configurados`: se añadió un fallback en `.github/workflows/prompt_mentor_ci.yml:83-97` (`QA_USERNAME=5555555555`, `QA_PASSWORD=Contraseña1#`) para no detener el pipeline, pero se recomienda crear los secretos `ZAP_QA_USER` y `ZAP_QA_PASS` con esos valores (u otros) para que no queden expuestos en los logs.
 - 2025-10-02 — `WeakKeyException` en JWT: se subió el secreto por defecto a 64 caracteres hex en `application.yml` y `application-docker.yml`.
 - 2025-10-02 — Duplicidad de beans `JwtTokenProvider`: eliminar la clase redundante y limpiar `target/` (`./mvnw clean`).
 - 2025-10-02 — `FlywaySqlException` por MariaDB ausente: levantar la base con Docker o apuntar a una instancia remota antes de `spring-boot:run`.
