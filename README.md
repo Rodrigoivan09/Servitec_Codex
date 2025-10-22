@@ -290,7 +290,6 @@ Licencia y autoría
 - Si tienes dudas o propuestas de mejora, documenta el contexto en la bitácora y abre un issue o PR siguiendo la metodología Prompt Mentor.
 
 ---
-
-
+Test Mentor
 
 ¡Listo! Con esta guía exhaustiva deberías poder clonar, ejecutar, depurar y extender Servitec con confianza, manteniendo la trazabilidad y buenas prácticas exigidas por la colaboración Codex ↔ Equipo. Recuerda siempre actualizar las bitácoras tras cada avance significativo. Felices despliegues. 🚀
