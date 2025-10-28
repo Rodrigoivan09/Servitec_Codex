@@ -99,6 +99,13 @@ Checklist inicial:
 - **Archivo `Dockerfile` no encontrado**: especificar el contexto correcto o usar `-f <ruta/Dockerfile>`.
 - **Nginx fuera de la VM**: ejecutar recargas únicamente dentro de la instancia (`sudo systemctl reload nginx`).
 
+## 10. Conceptos clave: Docker daemon, CLI y API
+- **Daemon (`dockerd`)**: proceso en segundo plano que permanece escuchando solicitudes y actúa como orquestador central de contenedores, imágenes, redes y volúmenes. Si no está activo, la CLI devuelve errores como “Cannot connect to the Docker daemon”.
+- **CLI (`docker ...`)**: cliente de línea de comandos que traduce tareas humanas (`docker build`, `docker run`, `docker ps`) en peticiones al daemon. Funciona sobre el socket Unix (`/var/run/docker.sock`) o sobre un endpoint TCP si se configura.
+- **API HTTP**: interfaz REST expuesta por el daemon; herramientas externas (dashboards, scripts personalizados, n8n, etc.) pueden invocarla directamente para crear contenedores o consultar el estado sin pasar por la CLI.
+- **Claves SSH persistentes**: genera pares dedicados (`ssh-keygen -t ed25519 -f ~/.ssh/<servicio>_<vm>`) y carga la pública en Compute Engine (metadatos o sección “SSH Keys”). Mantén la privada en GitHub Actions como secreto (`*_SSH_KEY`) junto con usuario/host (`*_SSH_USER`, `*_VM_HOST`).
+- **Buenas prácticas**: valida `systemctl status docker` antes de diagnosticar fallos y verifica que la llave cargada corresponda al usuario remoto indicado; para automatización GitHub Actions prefiere CLI (más auditable) y deja la API para integraciones sin shell.
+
 ## 10. Próximos éxitos a documentar
 - Automatización del pipeline (Cloud Build / GitHub Actions) para publicar imágenes automáticamente.
 - Gestión de variables de entorno sensibles con Secret Manager o `.env` cifrados.

@@ -54,6 +54,7 @@ Guía interna para futuras sesiones con Codex en proyectos de `rodrigo`. Resume 
 - `HELP.md`: notas generadas por Spring Initializr; conservarlas como referencia rápida de Maven/Spring Boot.
 - `README.md`: guía operativa del proyecto Servitec (modos Docker y local, usuarios de prueba, recomendaciones de desarrollo).
 - `docs/services/servitec.md`: bitácora pedagógica del servicio principal; registra cada sesión, validaciones y pendientes.
+- `docs/playbooks/servitec_codex/`: manual estructurado por fases DevOps (Onboarding, CI/CD, Infraestructura, Despliegue) para replicar configuraciones y pipelines sin fricción.
 - `docs/catalog/languages.md`: catálogo de stacks soportados; enlaza notas especializadas y bitácoras por lenguaje.
 - `Metodologia_Prompt_Mentor/CODEx_NOTES_template.md`: plantilla base para generar nuevas notas especializadas (`CODEx_NOTES_<tipo>.md`).
 

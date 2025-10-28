@@ -4,6 +4,30 @@ on:
   push:
     branches: ["main"]
   pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      event:
+        required: true
+        type: string
+        description: pr_opened | pr_merged
+      owner:
+        required: true
+        type: string
+      repo:
+        required: true
+        type: string
+      number:
+        required: true
+        type: string
+      action:
+        required: true
+        type: string
+      base:
+        required: false
+        type: string
+        default: "main"
 
 jobs:
   security-scans:
