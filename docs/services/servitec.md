@@ -25,6 +25,21 @@
 - **Acción sugerida**: ajustar temporalmente el nodo n8n para despachar `deploy-servitec.yml` sobre la rama `mentor`, o bien fusionar/fast-forward el workflow a `main` antes de volver a lanzar el dispatch. El archivo ya tiene `workflow_dispatch` sin inputs (`.github/workflows/deploy-servitec.yml:3-20`), por lo que basta con apuntar al branch correcto.
 - **Métrica (ISO 25010)**: fiabilidad del pipeline; mantener el flujo evita ejecuciones fallidas desde la orquestación externa.
 
+### 2025-10-28 — Push a Artifact Registry rechazado por permisos
+- **Contexto**: al volver a ejecutar el workflow de despliegue (`.github/workflows/deploy-servitec.yml:27-44`), el paso `docker push` devolvió `denied: Permission "artifactregistry.repositories.uploadArtifacts" denied`.
+- **Hallazgo**: la cuenta de servicio usada en `GCP_SA_KEY` no tiene el rol `roles/artifactregistry.writer` (o el repositorio `servitec-app` no existe en `us-central1`). El flujo OIDC (`google-github-actions/auth@v2`) autentica correctamente, pero sin ese permiso la API bloquea la carga.
+- **Acciones sugeridas**:
+  1. En GCP, asignar al service account el rol `Artifact Registry Writer` sobre el proyecto o, de forma granular, sobre el repositorio (`gcloud artifacts repositories add-iam-policy-binding servitec-app --location=us-central1 --member="serviceAccount:...@...gserviceaccount.com" --role="roles/artifactregistry.writer"`).
+  2. Verificar que el repositorio `servitec-app` existe (`gcloud artifacts repositories describe servitec-app --location=us-central1`); si falta, crearlo con `format=docker`. El listado inicial (`gcloud artifacts repositories list --location=us-central1`) devolvió 0 elementos, por lo que se aprovisionó con:
+     ```
+     gcloud artifacts repositories create servitec-app \
+       --repository-format=docker \
+       --location=us-central1 \
+       --description="Imagenes Servitec"
+     ```
+     La verificación posterior muestra el repositorio activo (`servitec-app  DOCKER  us-central1`, `gcloud artifacts repositories list --location=us-central1`).
+- **Métrica (ISO 25010)**: fiabilidad operativa del pipeline. Sin permisos de escritura la entrega continua queda bloqueada.
+
 ### 2025-10-28 — Acceso SSH persistente para despliegues
 - **Contexto**: necesitábamos un acceso reproducible desde estaciones locales y workflows CI/CD hacia la VM `rodev`. Las claves efímeras de Google (`google-ssh`) caducan el mismo día y no son aceptables para automatizaciones.
 - **Acción**: se generó una llave RSA dedicada con `ssh-keygen -o -t rsa -C rod` (por defecto `~/.ssh/id_rsa`), se registró la pública en `Compute Engine → VM instances → rodev → Edit → SSH Keys` y se verificó la sesión `ssh rod@35.192.59.158`. La clave privada se cargó en GitHub como `SERVITEC_SSH_KEY` junto con `SERVITEC_SSH_USER=rod` y `SERVITEC_VM_HOST=35.192.59.158`.
