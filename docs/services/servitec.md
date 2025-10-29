@@ -12,6 +12,45 @@
 
 ## 3. Bitácora pedagógica
 
+### 2025-10-28 — Docker operativo en la VM `rodev`
+- **Contexto**: habilitamos la instancia `rodev` (`us-central1-a`, IP `35.192.59.158`) para recibir despliegues automáticos desde GitHub Actions. Al conectar vía `gcloud compute ssh rodev --zone us-central1-a`, detectamos que la imagen Debian venía sin Docker.
+- **Acción**: ejecuté `sudo apt-get update && sudo apt-get install -y docker.io` seguido de `sudo systemctl enable docker && sudo systemctl start docker`. Añadí el usuario `rodrigo` al grupo `docker` con `sudo usermod -aG docker $USER` y confirmé su ejecución con `docker --version` y `docker run hello-world`. Dejé preparado `gcloud auth configure-docker us-central1-docker.pkg.dev` para que el workflow genere tokens via `gcloud auth print-access-token | sudo docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev`.
+- **Lección pedagógica**: el proceso `dockerd` funciona como *daemon* del sistema: permanece en segundo plano atendiendo peticiones que llegan tanto de la CLI (`docker build`, `docker run`) como de la API HTTP de Docker. Sin el daemon activo, la CLI no puede crear contenedores ni gestionar imágenes. Documentar este matiz evita confusiones cuando un comando CLI devuelve `Cannot connect to the Docker daemon`.
+- **Impacto en KPIs (ISO 25010)**: mejora la mantenibilidad, al dejar trazada la instalación base, y la fiabilidad, porque validamos que la VM puede responder al despliegue automatizado antes de integrar el workflow.
+- **Siguiente paso**: registrar en esta bitácora la primera ejecución del workflow `deploy-servitec.yml` (build + push + deploy) y adjuntar pruebas (`curl http://127.0.0.1:8090/login`) una vez que el contenedor quede expuesto. También replicar la explicación del daemon en `Metodologia_Prompt_Mentor/CODEx_NOTES_backend.md` para que otros servicios la referencien.
+
+### 2025-10-28 — Dispatch n8n rechaza `deploy-servitec.yml`
+- **Contexto**: al probar el nodo n8n que dispara el despliegue, la ejecución falló con `NodeOperationError: The workflow to dispatch could not be found`.
+- **Hallazgo**: la API de GitHub busca el workflow en la rama indicada por `ref`. El archivo `.github/workflows/deploy-servitec.yml` solo existe en la rama `mentor` local (`git status -sb` reporta `## mentor...origin/mentor [ahead 1]`) y aún no está en `origin/main`, por lo que un dispatch contra `main` devuelve 404.
+- **Acción sugerida**: ajustar temporalmente el nodo n8n para despachar `deploy-servitec.yml` sobre la rama `mentor`, o bien fusionar/fast-forward el workflow a `main` antes de volver a lanzar el dispatch. El archivo ya tiene `workflow_dispatch` sin inputs (`.github/workflows/deploy-servitec.yml:3-20`), por lo que basta con apuntar al branch correcto.
+- **Métrica (ISO 25010)**: fiabilidad del pipeline; mantener el flujo evita ejecuciones fallidas desde la orquestación externa.
+
+### 2025-10-28 — Acceso SSH persistente para despliegues
+- **Contexto**: necesitábamos un acceso reproducible desde estaciones locales y workflows CI/CD hacia la VM `rodev`. Las claves efímeras de Google (`google-ssh`) caducan el mismo día y no son aceptables para automatizaciones.
+- **Acción**: se generó una llave RSA dedicada con `ssh-keygen -o -t rsa -C rod` (por defecto `~/.ssh/id_rsa`), se registró la pública en `Compute Engine → VM instances → rodev → Edit → SSH Keys` y se verificó la sesión `ssh rod@35.192.59.158`. La clave privada se cargó en GitHub como `SERVITEC_SSH_KEY` junto con `SERVITEC_SSH_USER=rod` y `SERVITEC_VM_HOST=35.192.59.158`.
+- **Propósito pedagógico**: dejar el procedimiento paso a paso permite que cualquier integrante regenere la llave sin depender de memoria y garantiza que la CI pueda copiar literalmente los comandos.
+- **Validación**: `ssh rod@35.192.59.158` responde con el banner Debian y prompt `rod@rodev:$`.
+- **Próximos pasos**: complementar con la configuración del firewall (`gcloud compute firewall-rules create ...`) y registrar la carga de secretos en GitHub una vez completada.
+
+### 2025-10-22 — n8n despacha Prompt Mentor CI por API
+- **Contexto**: al preparar la automatización en n8n para re-ejecutar el pipeline ante aperturas, sincronizaciones y merges de PR, el workflow `Prompt Mentor CI` solo reaccionaba a `push` y `pull_request` genérico, por lo que el dispatch enviado por API era rechazado.
+- **Acción**: se restringió el gatillo de PR a `opened`/`synchronize` sobre `main` y se añadió `workflow_dispatch` con los inputs `event`, `owner`, `repo`, `number`, `action` y `base` que consume n8n (`.github/workflows/prompt_mentor_ci.yml:3-26`). Con ello, el pipeline puede ejecutarse tanto por eventos de GitHub como desde la integración externa.
+- **Evidencia**: actualización manual del YAML; no se requirió comando adicional. Verificar en GitHub Actions que aparezca el botón «Run workflow» con los nuevos parámetros y que el nodo `Dispatch a workflow event` complete sin error de validación.
+- **Métrica (ISO 25010)**: fiabilidad operativa del CI (se evita que la automatización falle) y mantenibilidad al documentar inputs explícitos para futuros consumidores.
+- **Próximo paso**: una vez que el flujo n8n también dispare los deploys, registrar en esta bitácora la estrategia elegida (via `workflow_run` o dispatch encadenado) y enlazar las bitácoras correspondientes.
+
+### 2025-10-22 — Alta de clave SSH dedicada para VM `rodev`
+- **Contexto**: se provisionó la VM `rodev` en `us-central1-a` (Debian 12) para alojar Servitec. Las llaves efímeras `google-ssh` expiran el mismo día y no son aptas para automatizar despliegues desde GitHub Actions.
+- **Acción pedagógica**:
+  1. Se reutilizó la rutina estándar y se generó una pareja RSA persistente: `ssh-keygen -o -t rsa -C rod` (se guardó en `~/.ssh/id_rsa`). Cuando otro colaborador inicie desde cero se sugiere ed25519 con `-t ed25519`, pero la VM acepta ambas.
+  2. Se verificó la clave pública con `cat ~/.ssh/id_rsa.pub` y se pegó en **Compute Engine → VM instances → rodev → Edit → SSH Keys**.
+  3. Se probó el acceso interactivo: `ssh rod@35.192.59.158` y la sesión abrió en Debian (`Linux rodev 6.1.0-40-cloud-amd64`). Si se usa una ruta diferente, agregar `-i` con la clave privada.
+  4. Preparar los secretos para el workflow Servitec: subir el archivo privado (`~/.ssh/id_rsa`) a GitHub como `SERVITEC_SSH_KEY` (formato PEM sin saltos extra) y definir `SERVITEC_SSH_USER`, `SERVITEC_VM_HOST`, `SERVITEC_VM_ZONE`.
+  5. Reutilizar el service account `codex-472522` o crear uno nuevo si se restringe el alcance; almacenarlo en `SERVITEC_GCP_SA_KEY`.
+- **Evidencia**: el historial de la terminal muestra `ssh rod@35.192.59.158` con prompt `rod@rodev:$` activo y la clave aparece listada en los metadatos de la VM.
+- **Métrica (ISO 25010)**: mejora de fiabilidad y mantenibilidad del proceso de despliegue continuo al eliminar dependencias de llaves expirables.
+- **Pendientes**: instalar Docker/Compose en la VM y crear el workflow `deploy-servitec.yml` tomando como referencia `.github/workflows/deploy-auth-user.yml` (documentar cuando se publique).
+
 ### 2025-10-21 — Pipeline de seguridad detenido por secretos faltantes
 - **Contexto inicial**: al revisar la bitácora de GitHub Actions se observó el fallo temprano del job `Security Scans (SpotBugs + ZAP)` en `prompt_mentor_ci.yml`.
 - **Hallazgo**: el paso `Authenticate QA user` aborta con el mensaje `GitHub Secrets SERVITEC_ZAP_USER / SERVITEC_ZAP_PASS no configurados` porque la validación `QA_USERNAME`/`QA_PASSWORD` queda vacía (`.github/workflows/prompt_mentor_ci.yml:38-76`).

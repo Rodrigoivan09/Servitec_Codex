@@ -12,6 +12,12 @@
 
 ## 3. Bitácora pedagógica
 
+### 2025-10-22 — Llave SSH rodev lista para despliegues multi-servicio
+- **Contexto**: el pipeline de Servitec y `validator_employee` compartirá la misma VM `rodev` (GCE, us-central1-a). Se requería una clave que no expirara para garantizar accesos automatizados.
+- **Acción**: se generó `ssh-keygen -o -t rsa -C rod` (almacenada en `~/.ssh/id_rsa`), se registró la pública en los metadatos de la instancia y se verificó con `ssh rod@35.192.59.158`. La misma credencial se exportará como `SERVITEC_SSH_KEY`/`SERVITEC_SSH_USER` y permitirá que futuros workflows `deploy-*.yml` accedan sin intervención manual.
+- **Propósito para el servicio**: habilitar despliegues coordinados (por ejemplo, cuando Servitec consuma `validator_employee` a través de la red interna) y mantener coherencia con el manual DevOps compartido.
+- **Pendiente**: cuando se cree el workflow `deploy-validator-employee.yml`, referenciar esta clave y documentar las variables (`VM_HOST`, `VM_PORT_MAPPING`) en esta bitácora.
+
 ### 2025-10-04 — Pipeline de seguridad automatizado
 - **Contexto**: alineamos la metodología con KPI de mantenibilidad/fiabilidad; faltaba ejecutar SAST/DAST recurrente.
 - **Acción**: el workflow `Prompt Mentor CI` ahora incorpora el job `security-scans` (Bandit + OWASP ZAP baseline) que sube los artefactos `bandit-report` y `zap-baseline-report` en cada ejecución.

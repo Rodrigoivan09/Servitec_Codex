@@ -1,0 +1,111 @@
+name: Deploy Servitec
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'pom.xml'
+      - '.github/workflows/deploy-servitec.yml'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: us-central1-docker.pkg.dev/servitec-476518/servitec-app/servitec:latest
+  CONTAINER_NAME: servitec_app
+  VM_PORT_MAPPING: 127.0.0.1:8090:8090
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: servitec-476518
+
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: docker build -t "$IMAGE_NAME" .
+
+      - name: Push Docker image
+        run: docker push "$IMAGE_NAME"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      contents: read
+    steps:
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: servitec-476518
+
+      - name: Generate Artifact Registry access token
+        id: gcp_token
+        run: echo "token=$(gcloud auth print-access-token)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare SSH key
+        run: |
+          echo "${{ secrets.SERVITEC_SSH_KEY }}" > key.pem
+          chmod 600 key.pem
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.SERVITEC_VM_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy on rodev
+        env:
+          ACCESS_TOKEN: ${{ steps.gcp_token.outputs.token }}
+        run: |
+          ssh -i key.pem "${{ secrets.SERVITEC_SSH_USER }}"@"${{ secrets.SERVITEC_VM_HOST }}" \
+            ACCESS_TOKEN="$ACCESS_TOKEN" \
+            IMAGE_NAME="$IMAGE_NAME" \
+            CONTAINER_NAME="$CONTAINER_NAME" \
+            VM_PORT_MAPPING="$VM_PORT_MAPPING" \
+            'bash -s' <<'EOF'
+          set -euo pipefail
+
+          echo "[deploy] Authenticating against Artifact Registry"
+          echo "$ACCESS_TOKEN" | sudo docker login --username oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+
+          echo "[deploy] Current disk usage"
+          df -h /
+          sudo docker system df || true
+
+          echo "[deploy] Stopping previous container (if any)"
+          sudo docker stop "$CONTAINER_NAME" || true
+          sudo docker rm "$CONTAINER_NAME" || true
+
+          echo "[deploy] Pruning old artefacts"
+          sudo docker image prune -af || true
+          sudo docker system prune -af || true
+
+          echo "[deploy] Pulling new image $IMAGE_NAME"
+          sudo docker pull "$IMAGE_NAME"
+
+          echo "[deploy] Running container"
+          sudo docker run -d --name "$CONTAINER_NAME" --restart unless-stopped \
+            -p "$VM_PORT_MAPPING" \
+            -e SPRING_PROFILES_ACTIVE=docker \
+            "$IMAGE_NAME"
+
+          echo "[deploy] Container status"
+          sudo docker ps --filter "name=$CONTAINER_NAME"
+          EOF
