@@ -56,7 +56,7 @@
 - **Acciones sugeridas**:
   1. Revisar el nodo inmediatamente anterior y confirmar qué propiedades entrega; si la fuente es un webhook de PR, mapear explícitamente `owner`, `repo`, `number`, `action`, `base`.
   2. Mientras se valida el wiring, usar valores literales para pruebas (`"owner": "rodrigo"`, `"repo": "Servitec_Codex"`, etc.) y confirmar que el dispatch completa. Luego volver a parametrizar cuando el JSON esté disponible.
-  3. Documentar en n8n que este nodo no debe ejecutarse si los campos llegan `undefined`; añadir una verificación o un `IF` previo para detener el flujo cuando falte información.
+  3. Documentar en n8n que este nodo no debe ejecutarse si los campos llegan `undefined`; añadir una verificación o un `IF` previo para detener el flujo cuando falte información. En la última prueba, las expresiones siguen resolviéndose como `=[undefined]` porque `$json.number` y `$json.action` no existen en el payload. Ajustar la expresión al camino real (por ejemplo `$json.pull_request.number`, `$json.action` del trigger) o proporcionar un valor por defecto (`{{ $json.number || '' }}`) antes de despachar.
 - **Métrica (ISO 25010)**: fiabilidad de la integración externa; la definición clara de inputs evita ejecuciones erróneas.
 
 ### 2025-10-28 — Acceso SSH persistente para despliegues
