@@ -19,6 +19,12 @@
 - **Impacto en KPIs (ISO 25010)**: mejora la mantenibilidad, al dejar trazada la instalación base, y la fiabilidad, porque validamos que la VM puede responder al despliegue automatizado antes de integrar el workflow.
 - **Siguiente paso**: registrar en esta bitácora la primera ejecución del workflow `deploy-servitec.yml` (build + push + deploy) y adjuntar pruebas (`curl http://127.0.0.1:8090/login`) una vez que el contenedor quede expuesto. También replicar la explicación del daemon en `Metodologia_Prompt_Mentor/CODEx_NOTES_backend.md` para que otros servicios la referencien.
 
+### 2025-10-28 — Dispatch n8n rechaza `deploy-servitec.yml`
+- **Contexto**: al probar el nodo n8n que dispara el despliegue, la ejecución falló con `NodeOperationError: The workflow to dispatch could not be found`.
+- **Hallazgo**: la API de GitHub busca el workflow en la rama indicada por `ref`. El archivo `.github/workflows/deploy-servitec.yml` solo existe en la rama `mentor` local (`git status -sb` reporta `## mentor...origin/mentor [ahead 1]`) y aún no está en `origin/main`, por lo que un dispatch contra `main` devuelve 404.
+- **Acción sugerida**: ajustar temporalmente el nodo n8n para despachar `deploy-servitec.yml` sobre la rama `mentor`, o bien fusionar/fast-forward el workflow a `main` antes de volver a lanzar el dispatch. El archivo ya tiene `workflow_dispatch` sin inputs (`.github/workflows/deploy-servitec.yml:3-20`), por lo que basta con apuntar al branch correcto.
+- **Métrica (ISO 25010)**: fiabilidad del pipeline; mantener el flujo evita ejecuciones fallidas desde la orquestación externa.
+
 ### 2025-10-28 — Acceso SSH persistente para despliegues
 - **Contexto**: necesitábamos un acceso reproducible desde estaciones locales y workflows CI/CD hacia la VM `rodev`. Las claves efímeras de Google (`google-ssh`) caducan el mismo día y no son aceptables para automatizaciones.
 - **Acción**: se generó una llave RSA dedicada con `ssh-keygen -o -t rsa -C rod` (por defecto `~/.ssh/id_rsa`), se registró la pública en `Compute Engine → VM instances → rodev → Edit → SSH Keys` y se verificó la sesión `ssh rod@35.192.59.158`. La clave privada se cargó en GitHub como `SERVITEC_SSH_KEY` junto con `SERVITEC_SSH_USER=rod` y `SERVITEC_VM_HOST=35.192.59.158`.
