@@ -55,7 +55,7 @@
 - **Hallazgo**: la VM `rodev` mantiene en metadata la entrada `rodrigo:ssh-rsa ...`. Si la privada cargada en `SERVITEC_SSH_KEY` no corresponde exactamente a esa pública, el demonio SSH rechaza la conexión.
 - **Acciones sugeridas**:
   1. Confirmar el usuario en el secreto (`SERVITEC_SSH_USER=rodrigo`) y que coincide con la metadata (`gcloud compute instances describe rodev --zone=us-central1-a --format='value(metadata.ssh-keys)'`).
-  2. Derivar la clave pública desde la privada que usamos en GitHub (`ssh-keygen -y -f ~/ruta/clave_privada`) y comparar con la cadena guardada en la VM. Si difiere, agregar la nueva pública en los metadatos o reemplazar la privada en el secreto.
+  2. Derivar la clave pública desde la privada que usamos en GitHub (`ssh-keygen -y -f ~/ruta/clave_privada`) y comparar con la cadena guardada en la VM. Si difiere, agregar la nueva pública en los metadatos o reemplazar la privada en el secreto. En la verificación más reciente, el `ssh-keygen -y -f ~/.ssh/id_rsa` devolvió una clave que no coincide con ninguna de las registradas en `~/.ssh/authorized_keys`; limpiar ese archivo (`nano ~/.ssh/authorized_keys`) y pegar solo la línea actual permite al daemon aceptar la llave correcta.
   3. Validar manualmente `ssh -i clave_privada rodrigo@35.192.59.158` desde un entorno local; cuando esa sesión funcione, repetir el pipeline.
 - **Métrica (ISO 25010)**: fiabilidad del despliegue; la sincronización de llaves garantiza accesos consistentes.
 
