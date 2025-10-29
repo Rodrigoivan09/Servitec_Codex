@@ -50,6 +50,15 @@
   3. Probar localmente: `ssh -i key.pem SERVITEC_SSH_USER@SERVITEC_VM_HOST` desde un entorno Linux. Si la clave solicita passphrase o falla, regenerarla con el flujo simplificado `ssh-keygen -o -t rsa -C rod`, tal como acordamos documentar para el equipo. Añadir la pública a la VM (`Compute Engine → VM instances → rodev → Edit → SSH Keys`) y la privada en `SERVITEC_SSH_KEY`. Mantener esta directriz de “comandos mínimos que funcionen” para futuras regeneraciones.
 - **Métrica (ISO 25010)**: fiabilidad operativa del pipeline; sin acceso SSH el despliegue no se ejecuta en la VM `rodev`.
 
+### 2025-10-29 — Inputs vacíos en dispatch n8n
+- **Contexto**: al reintentar el nodo n8n que despacha el workflow, ya no aparece el error 404, pero el formulario marca en rojo los campos `owner`, `repo`, `number` y `action` dentro de `inputs`.
+- **Hallazgo**: el nodo espera datos dinámicos provenientes del payload (`{{$json.owner}}`, etc.), pero la rama actual del flow no los genera. n8n termina enviando strings vacíos y GitHub rechaza el dispatch.
+- **Acciones sugeridas**:
+  1. Revisar el nodo inmediatamente anterior y confirmar qué propiedades entrega; si la fuente es un webhook de PR, mapear explícitamente `owner`, `repo`, `number`, `action`, `base`.
+  2. Mientras se valida el wiring, usar valores literales para pruebas (`"owner": "rodrigo"`, `"repo": "Servitec_Codex"`, etc.) y confirmar que el dispatch completa. Luego volver a parametrizar cuando el JSON esté disponible.
+  3. Documentar en n8n que este nodo no debe ejecutarse si los campos llegan `undefined`; añadir una verificación o un `IF` previo para detener el flujo cuando falte información.
+- **Métrica (ISO 25010)**: fiabilidad de la integración externa; la definición clara de inputs evita ejecuciones erróneas.
+
 ### 2025-10-28 — Acceso SSH persistente para despliegues
 - **Contexto**: necesitábamos un acceso reproducible desde estaciones locales y workflows CI/CD hacia la VM `rodev`. Las claves efímeras de Google (`google-ssh`) caducan el mismo día y no son aceptables para automatizaciones.
 - **Acción**: se generó una llave RSA dedicada con `ssh-keygen -o -t rsa -C rod` (por defecto `~/.ssh/id_rsa`), se registró la pública en `Compute Engine → VM instances → rodev → Edit → SSH Keys` y se verificó la sesión `ssh rod@35.192.59.158`. La clave privada se cargó en GitHub como `SERVITEC_SSH_KEY` junto con `SERVITEC_SSH_USER=rod` y `SERVITEC_VM_HOST=35.192.59.158`.
