@@ -38,6 +38,7 @@
        --description="Imagenes Servitec"
      ```
      La verificación posterior muestra el repositorio activo (`servitec-app  DOCKER  us-central1`, `gcloud artifacts repositories list --location=us-central1`).
+  3. Tras el alta del repositorio, el push sigue fallando con `artifactregistry.repositories.uploadArtifacts denied`, lo que confirma que al service account leído de `GCP_SA_KEY` aún le falta el rol `roles/artifactregistry.writer`. Extraer el `client_email` del JSON (`jq -r '.client_email' GCP_SA_KEY.json`) y asignarle el rol ya sea a nivel proyecto (`gcloud projects add-iam-policy-binding`) o solo al repositorio (`gcloud artifacts repositories add-iam-policy-binding ... --role=roles/artifactregistry.writer`). Validar con `gcloud artifacts repositories get-iam-policy servitec-app --location=us-central1` que el binding quedó registrado antes de reintentar el workflow.
 - **Métrica (ISO 25010)**: fiabilidad operativa del pipeline. Sin permisos de escritura la entrega continua queda bloqueada.
 
 ### 2025-10-28 — Acceso SSH persistente para despliegues
