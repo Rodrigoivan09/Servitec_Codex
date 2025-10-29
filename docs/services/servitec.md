@@ -50,6 +50,15 @@
   3. Probar localmente: `ssh -i key.pem SERVITEC_SSH_USER@SERVITEC_VM_HOST` desde un entorno Linux. Si la clave solicita passphrase o falla, regenerarla con el flujo simplificado `ssh-keygen -o -t rsa -C rod`, tal como acordamos documentar para el equipo. Añadir la pública a la VM (`Compute Engine → VM instances → rodev → Edit → SSH Keys`) y la privada en `SERVITEC_SSH_KEY`. Mantener esta directriz de “comandos mínimos que funcionen” para futuras regeneraciones.
 - **Métrica (ISO 25010)**: fiabilidad operativa del pipeline; sin acceso SSH el despliegue no se ejecuta en la VM `rodev`.
 
+### 2025-10-29 — `Permission denied (publickey)` persiste en CI
+- **Contexto**: tras actualizar la clave RSA, el job `deploy` continúa fallando en `ssh -i key.pem ...` con `Permission denied (publickey)` (ya no aparece el error de libcrypto, por lo que la clave se lee, pero no es aceptada por la VM).
+- **Hallazgo**: la VM `rodev` mantiene en metadata la entrada `rodrigo:ssh-rsa ...`. Si la privada cargada en `SERVITEC_SSH_KEY` no corresponde exactamente a esa pública, el demonio SSH rechaza la conexión.
+- **Acciones sugeridas**:
+  1. Confirmar el usuario en el secreto (`SERVITEC_SSH_USER=rodrigo`) y que coincide con la metadata (`gcloud compute instances describe rodev --zone=us-central1-a --format='value(metadata.ssh-keys)'`).
+  2. Derivar la clave pública desde la privada que usamos en GitHub (`ssh-keygen -y -f ~/ruta/clave_privada`) y comparar con la cadena guardada en la VM. Si difiere, agregar la nueva pública en los metadatos o reemplazar la privada en el secreto.
+  3. Validar manualmente `ssh -i clave_privada rodrigo@35.192.59.158` desde un entorno local; cuando esa sesión funcione, repetir el pipeline.
+- **Métrica (ISO 25010)**: fiabilidad del despliegue; la sincronización de llaves garantiza accesos consistentes.
+
 ### 2025-10-29 — Inputs vacíos en dispatch n8n
 - **Contexto**: al reintentar el nodo n8n que despacha el workflow, ya no aparece el error 404, pero el formulario marca en rojo los campos `owner`, `repo`, `number` y `action` dentro de `inputs`.
 - **Hallazgo**: el nodo espera datos dinámicos provenientes del payload (`{{$json.owner}}`, etc.), pero la rama actual del flow no los genera. n8n termina enviando strings vacíos y GitHub rechaza el dispatch.
