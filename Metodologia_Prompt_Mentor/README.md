@@ -57,3 +57,6 @@ La estrategia asume que esta carpeta vive en la raíz del repositorio. Si decide
   ```
 
 Sigue las indicaciones de la estrategia para mantener la documentación sincronizada y versionada.
+
+
+
