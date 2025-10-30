@@ -59,6 +59,12 @@
   3. Validar manualmente `ssh -i clave_privada rodrigo@35.192.59.158` desde un entorno local; cuando esa sesión funcione, repetir el pipeline.
 - **Métrica (ISO 25010)**: fiabilidad del despliegue; la sincronización de llaves garantiza accesos consistentes.
 
+### 2025-10-29 — Comando SSH del workflow reestructurado
+- **Contexto**: aunque la llave CI ya coincidía con la pública en `authorized_keys`, el job seguía fallando con `unknown option -- -` antes de autenticarse. El bloque de despliegue (`.github/workflows/deploy-servitec.yml:73-108`) pasaba las asignaciones `ACCESS_TOKEN=...` como argumentos sueltos a `ssh`, que los interpretaba como opciones.
+- **Acción**: se canalizó el script remoto mediante un `here-doc` y `printf '%q'` para exportar `ACCESS_TOKEN`, `IMAGE_NAME`, `CONTAINER_NAME` y `VM_PORT_MAPPING` dentro del shell remoto. El `ssh` queda al final del bloque, tomando como entrada el script ya parametrizado.
+- **Resultado**: GitHub Actions deja de invocar la ayuda de `ssh` y ejecuta el script de despliegue con las variables correctas.
+- **Métrica (ISO 25010)**: fiabilidad del pipeline; elimina regresiones por parsing de argumentos.
+
 ### 2025-10-29 — Inputs vacíos en dispatch n8n
 - **Contexto**: al reintentar el nodo n8n que despacha el workflow, ya no aparece el error 404, pero el formulario marca en rojo los campos `owner`, `repo`, `number` y `action` dentro de `inputs`.
 - **Hallazgo**: el nodo espera datos dinámicos provenientes del payload (`{{$json.owner}}`, etc.), pero la rama actual del flow no los genera. n8n termina enviando strings vacíos y GitHub rechaza el dispatch.

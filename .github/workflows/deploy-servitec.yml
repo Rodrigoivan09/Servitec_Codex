@@ -109,3 +109,19 @@ jobs:
           echo "[deploy] Container status"
           sudo docker ps --filter "name=$CONTAINER_NAME"
           EOF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
