@@ -83,7 +83,6 @@ jobs:
           DB_PASSWORD: ${{ secrets.SERVITEC_DB_PASSWORD }}
         run: |
           ssh -i key.pem "${{ secrets.SERVITEC_SSH_USER }}"@"${{ secrets.SERVITEC_VM_HOST }}" \
-            ACCESS_TOKEN="$ACCESS_TOKEN" \
             IMAGE_NAME="$IMAGE_NAME" \
             CONTAINER_NAME="$CONTAINER_NAME" \
             VM_PORT_MAPPING="$VM_PORT_MAPPING" \
@@ -95,7 +94,14 @@ jobs:
             DB_NAME="$DB_NAME" \
             DB_USER="$DB_USER" \
             DB_PASSWORD="$DB_PASSWORD" \
-            'bash -s' <<'EOF'
+            'bash -s' "$ACCESS_TOKEN" <<'EOF'
+          if [ -z "${1:-}" ]; then
+            echo "[deploy] ERROR: ACCESS_TOKEN argument not provided."
+            exit 1
+          fi
+
+          ACCESS_TOKEN="$1"
+
           set -euo pipefail
 
           echo "[deploy] Authenticating against Artifact Registry"
@@ -175,8 +181,6 @@ jobs:
           echo "[deploy] Container status"
           sudo docker ps --filter "name=$CONTAINER_NAME"
           EOF
-
-
 
 
 

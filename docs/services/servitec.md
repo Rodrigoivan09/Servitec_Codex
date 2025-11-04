@@ -81,6 +81,12 @@
 - **Acciones siguientes**: registrar los secretos en GitHub (`Settings → Secrets and variables → Actions`) antes de ejecutar el pipeline y, si se requieren seeds, montar `db-init/` como volumen adicional en el bloque MariaDB. Tras cada despliegue conviene auditar con `sudo docker ps` y `sudo docker volume ls` que ambos contenedores sigan en `servitec_network`.
 - **Métricas (ISO 25010)**: mejora la fiabilidad (arranques consistentes) y la mantenibilidad (despliegue reproducible con infraestructura declarativa). Monitorear el MTTR cuando se reinicie la VM o se restablezca el volumen para incorporar datos a la bitácora EBSE.
 
+### 2025-10-29 — Token OIDC no llegaba al script remoto
+- **Contexto**: durante el deploy `Deploy Servitec`, el comando `echo "$ACCESS_TOKEN" | sudo docker login` abortaba con `ACCESS_TOKEN: unbound variable`, indicando que el token generado por `google-github-actions/auth` no se propagaba al shell dentro de la VM.
+- **Acción**: ajustamos el paso `Deploy on rodev` para pasar el token como argumento posicional y validarlo antes de activar `set -u` (`.github/workflows/deploy-servitec.yml:83-118`). De esta forma evitamos depender de la asignación de variables de entorno vía SSH y fallamos con un mensaje claro si el argumento llega vacío.
+- **Lección pedagógica**: cuando se usa `set -u` para endurecer scripts remotos, conviene inicializar/validar explícitamente los parámetros críticos antes de usarlos. Pasar valores sensibles como parámetros evita problemas con `PermitUserEnvironment` o shells remotos que limpian asignaciones inline.
+- **Siguiente paso**: reejecutar el workflow para confirmar que el login contra Artifact Registry recibe el token y documentar la primera corrida exitosa con `docker ps` y `curl` en esta misma bitácora.
+
 ### 2025-10-28 — Acceso SSH persistente para despliegues
 - **Contexto**: necesitábamos un acceso reproducible desde estaciones locales y workflows CI/CD hacia la VM `rodev`. Las claves efímeras de Google (`google-ssh`) caducan el mismo día y no son aceptables para automatizaciones.
 - **Acción**: se generó una llave RSA dedicada con `ssh-keygen -o -t rsa -C rod` (por defecto `~/.ssh/id_rsa`), se registró la pública en `Compute Engine → VM instances → rodev → Edit → SSH Keys` y se verificó la sesión `ssh rod@35.192.59.158`. La clave privada se cargó en GitHub como `SERVITEC_SSH_KEY` junto con `SERVITEC_SSH_USER=rod` y `SERVITEC_VM_HOST=35.192.59.158`.
