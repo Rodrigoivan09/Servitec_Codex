@@ -14,6 +14,10 @@ env:
   IMAGE_NAME: us-central1-docker.pkg.dev/servitec-476518/servitec-app/servitec:latest
   CONTAINER_NAME: servitec_app
   VM_PORT_MAPPING: 127.0.0.1:8090:8090
+  DOCKER_NETWORK: servitec_network
+  DB_CONTAINER_NAME: servitec_db
+  DB_VOLUME_NAME: servitec_db_data
+  MARIADB_IMAGE: mariadb:10.11
 
 jobs:
   build-and-push:
@@ -73,12 +77,24 @@ jobs:
       - name: Deploy on rodev
         env:
           ACCESS_TOKEN: ${{ steps.gcp_token.outputs.token }}
+          DB_ROOT_PASSWORD: ${{ secrets.SERVITEC_DB_ROOT_PASSWORD }}
+          DB_NAME: ${{ secrets.SERVITEC_DB_NAME }}
+          DB_USER: ${{ secrets.SERVITEC_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SERVITEC_DB_PASSWORD }}
         run: |
           ssh -i key.pem "${{ secrets.SERVITEC_SSH_USER }}"@"${{ secrets.SERVITEC_VM_HOST }}" \
             ACCESS_TOKEN="$ACCESS_TOKEN" \
             IMAGE_NAME="$IMAGE_NAME" \
             CONTAINER_NAME="$CONTAINER_NAME" \
             VM_PORT_MAPPING="$VM_PORT_MAPPING" \
+            DOCKER_NETWORK="$DOCKER_NETWORK" \
+            DB_CONTAINER_NAME="$DB_CONTAINER_NAME" \
+            DB_VOLUME_NAME="$DB_VOLUME_NAME" \
+            MARIADB_IMAGE="$MARIADB_IMAGE" \
+            DB_ROOT_PASSWORD="$DB_ROOT_PASSWORD" \
+            DB_NAME="$DB_NAME" \
+            DB_USER="$DB_USER" \
+            DB_PASSWORD="$DB_PASSWORD" \
             'bash -s' <<'EOF'
           set -euo pipefail
 
@@ -97,19 +113,68 @@ jobs:
           sudo docker image prune -af || true
           sudo docker system prune -af || true
 
+          NETWORK_NAME="${DOCKER_NETWORK:-servitec_network}"
+          DB_CONTAINER="${DB_CONTAINER_NAME:-servitec_db}"
+          DB_VOLUME="${DB_VOLUME_NAME:-servitec_db_data}"
+          MARIADB_IMAGE="${MARIADB_IMAGE:-mariadb:10.11}"
+
+          echo "[deploy] Ensuring Docker network $NETWORK_NAME"
+          if ! sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
+            sudo docker network create "$NETWORK_NAME"
+          fi
+
+          echo "[deploy] Ensuring volume $DB_VOLUME"
+          sudo docker volume create "$DB_VOLUME" >/dev/null
+
+          if [ -z "${DB_ROOT_PASSWORD:-}" ] || [ -z "${DB_NAME:-}" ] || [ -z "${DB_USER:-}" ] || [ -z "${DB_PASSWORD:-}" ]; then
+            echo "[deploy] ERROR: Database secrets are not defined. Aborting deployment."
+            exit 1
+          fi
+
+          echo "[deploy] Deploying MariaDB container"
+          sudo docker pull "$MARIADB_IMAGE"
+          sudo docker stop "$DB_CONTAINER" || true
+          sudo docker rm "$DB_CONTAINER" || true
+          sudo docker run -d --name "$DB_CONTAINER" --restart unless-stopped \
+            --network "$NETWORK_NAME" \
+            -v "$DB_VOLUME":/var/lib/mysql \
+            -e MYSQL_ROOT_PASSWORD="$DB_ROOT_PASSWORD" \
+            -e MYSQL_DATABASE="$DB_NAME" \
+            -e MYSQL_USER="$DB_USER" \
+            -e MYSQL_PASSWORD="$DB_PASSWORD" \
+            "$MARIADB_IMAGE" \
+            --lower_case_table_names=1 \
+            --character-set-server=utf8mb4 \
+            --collation-server=utf8mb4_unicode_ci
+
+          echo "[deploy] Waiting for MariaDB to accept connections"
+          for attempt in $(seq 1 30); do
+            if sudo docker exec "$DB_CONTAINER" mysqladmin ping -h 127.0.0.1 -p"$DB_ROOT_PASSWORD" --silent; then
+              break
+            fi
+            sleep 2
+            if [ "$attempt" -eq 30 ]; then
+              echo "[deploy] ERROR: MariaDB did not become ready in time."
+              exit 1
+            fi
+          done
+
           echo "[deploy] Pulling new image $IMAGE_NAME"
           sudo docker pull "$IMAGE_NAME"
 
           echo "[deploy] Running container"
           sudo docker run -d --name "$CONTAINER_NAME" --restart unless-stopped \
+            --network "$NETWORK_NAME" \
             -p "$VM_PORT_MAPPING" \
             -e SPRING_PROFILES_ACTIVE=docker \
+            -e SPRING_DATASOURCE_URL="jdbc:mariadb://$DB_CONTAINER:3306/$DB_NAME" \
+            -e SPRING_DATASOURCE_USERNAME="$DB_USER" \
+            -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
             "$IMAGE_NAME"
 
           echo "[deploy] Container status"
           sudo docker ps --filter "name=$CONTAINER_NAME"
           EOF
-
 
 
 
