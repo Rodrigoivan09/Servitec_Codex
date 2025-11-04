@@ -190,7 +190,7 @@ jobs:
           echo "[deploy] Running container"
           sudo docker run -d --name "$CONTAINER_NAME" --restart unless-stopped \
             --network "$NETWORK_NAME" \
-            -p "$VM_PORT_MAPPING" \
+            -p "$vm_port_mapping" \
             -e SPRING_PROFILES_ACTIVE=docker \
             -e SPRING_DATASOURCE_URL="jdbc:mariadb://$DB_CONTAINER:3306/$db_name" \
             -e SPRING_DATASOURCE_USERNAME="$db_user" \
@@ -200,7 +200,6 @@ jobs:
           echo "[deploy] Container status"
           sudo docker ps --filter "name=$container_name"
           EOF
-
 
 
 
