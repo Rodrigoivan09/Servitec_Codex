@@ -83,7 +83,7 @@
 
 ### 2025-10-29 — Token OIDC y parámetros no llegaban al script remoto
 - **Contexto**: durante el deploy `Deploy Servitec`, el comando `echo "$ACCESS_TOKEN" | sudo docker login` abortaba con `ACCESS_TOKEN: unbound variable`, indicando que el token generado por `google-github-actions/auth` no se propagaba al shell dentro de la VM.
-- **Acción**: ajustamos el paso `Deploy on rodev` para pasar el token como argumento posicional y validar los parámetros críticos antes de activar `set -u` (`.github/workflows/deploy-servitec.yml:83-141`). Normalizamos defaults seguros (`servitec_app`, `servitec_network`, etc.) usando `: "${VAR:=default}"` y forzamos como obligatorios los secretos sensibles.
+- **Acción**: ajustamos el paso `Deploy on rodev` para pasar el token como argumento posicional y validar los parámetros críticos antes de activar `set -u` (`.github/workflows/deploy-servitec.yml:83-163`). Normalizamos defaults seguros (`servitec_app`, `servitec_network`, etc.) con asignaciones tempranas y marcamos como obligatorios los secretos sensibles; si faltan, el script aborta con un mensaje explicativo.
 - **Lección pedagógica**: cuando se usa `set -u` para endurecer scripts remotos, conviene inicializar/validar explícitamente los parámetros críticos antes de usarlos. Pasar valores sensibles como parámetros evita problemas con `PermitUserEnvironment` o shells remotos que limpian asignaciones inline.
 - **Siguiente paso**: reejecutar el workflow para confirmar que el login contra Artifact Registry recibe el token y documentar la primera corrida exitosa con `docker ps` y `curl` en esta misma bitácora.
 
