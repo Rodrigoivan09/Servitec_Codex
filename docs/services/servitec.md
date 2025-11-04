@@ -81,9 +81,9 @@
 - **Acciones siguientes**: registrar los secretos en GitHub (`Settings → Secrets and variables → Actions`) antes de ejecutar el pipeline y, si se requieren seeds, montar `db-init/` como volumen adicional en el bloque MariaDB. Tras cada despliegue conviene auditar con `sudo docker ps` y `sudo docker volume ls` que ambos contenedores sigan en `servitec_network`.
 - **Métricas (ISO 25010)**: mejora la fiabilidad (arranques consistentes) y la mantenibilidad (despliegue reproducible con infraestructura declarativa). Monitorear el MTTR cuando se reinicie la VM o se restablezca el volumen para incorporar datos a la bitácora EBSE.
 
-### 2025-10-29 — Token OIDC no llegaba al script remoto
+### 2025-10-29 — Token OIDC y parámetros no llegaban al script remoto
 - **Contexto**: durante el deploy `Deploy Servitec`, el comando `echo "$ACCESS_TOKEN" | sudo docker login` abortaba con `ACCESS_TOKEN: unbound variable`, indicando que el token generado por `google-github-actions/auth` no se propagaba al shell dentro de la VM.
-- **Acción**: ajustamos el paso `Deploy on rodev` para pasar el token como argumento posicional y validar los parámetros críticos antes de activar `set -u` (`.github/workflows/deploy-servitec.yml:83-132`). Ahora forzamos valores por defecto seguros (`servitec_app`, `servitec_network`, etc.) y marcamos como obligatorios los secretos sensibles.
+- **Acción**: ajustamos el paso `Deploy on rodev` para pasar el token como argumento posicional y validar los parámetros críticos antes de activar `set -u` (`.github/workflows/deploy-servitec.yml:83-141`). Normalizamos defaults seguros (`servitec_app`, `servitec_network`, etc.) usando `: "${VAR:=default}"` y forzamos como obligatorios los secretos sensibles.
 - **Lección pedagógica**: cuando se usa `set -u` para endurecer scripts remotos, conviene inicializar/validar explícitamente los parámetros críticos antes de usarlos. Pasar valores sensibles como parámetros evita problemas con `PermitUserEnvironment` o shells remotos que limpian asignaciones inline.
 - **Siguiente paso**: reejecutar el workflow para confirmar que el login contra Artifact Registry recibe el token y documentar la primera corrida exitosa con `docker ps` y `curl` en esta misma bitácora.
 

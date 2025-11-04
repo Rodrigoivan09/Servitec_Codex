@@ -102,19 +102,21 @@ jobs:
 
           ACCESS_TOKEN="$1"
 
-          set -euo pipefail
+          set -eo pipefail
 
-          IMAGE_NAME="${IMAGE_NAME:?IMAGE_NAME environment variable is required}"
-          CONTAINER_NAME="${CONTAINER_NAME:-servitec_app}"
-          VM_PORT_MAPPING="${VM_PORT_MAPPING:-127.0.0.1:8090:8090}"
-          DOCKER_NETWORK="${DOCKER_NETWORK:-servitec_network}"
-          DB_CONTAINER_NAME="${DB_CONTAINER_NAME:-servitec_db}"
-          DB_VOLUME_NAME="${DB_VOLUME_NAME:-servitec_db_data}"
-          MARIADB_IMAGE="${MARIADB_IMAGE:-mariadb:10.11}"
-          DB_ROOT_PASSWORD="${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD environment variable is required}"
-          DB_NAME="${DB_NAME:?DB_NAME environment variable is required}"
-          DB_USER="${DB_USER:?DB_USER environment variable is required}"
-          DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD environment variable is required}"
+          : "${IMAGE_NAME:?IMAGE_NAME environment variable is required}"
+          : "${CONTAINER_NAME:=servitec_app}"
+          : "${VM_PORT_MAPPING:=127.0.0.1:8090:8090}"
+          : "${DOCKER_NETWORK:=servitec_network}"
+          : "${DB_CONTAINER_NAME:=servitec_db}"
+          : "${DB_VOLUME_NAME:=servitec_db_data}"
+          : "${MARIADB_IMAGE:=mariadb:10.11}"
+          : "${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD environment variable is required}"
+          : "${DB_NAME:?DB_NAME environment variable is required}"
+          : "${DB_USER:?DB_USER environment variable is required}"
+          : "${DB_PASSWORD:?DB_PASSWORD environment variable is required}"
+
+          set -u
 
           echo "[deploy] Authenticating against Artifact Registry"
           echo "$ACCESS_TOKEN" | sudo docker login --username oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
@@ -131,10 +133,10 @@ jobs:
           sudo docker image prune -af || true
           sudo docker system prune -af || true
 
-          NETWORK_NAME="${DOCKER_NETWORK:-servitec_network}"
-          DB_CONTAINER="${DB_CONTAINER_NAME:-servitec_db}"
-          DB_VOLUME="${DB_VOLUME_NAME:-servitec_db_data}"
-          MARIADB_IMAGE="${MARIADB_IMAGE:-mariadb:10.11}"
+          NETWORK_NAME="$DOCKER_NETWORK"
+          DB_CONTAINER="$DB_CONTAINER_NAME"
+          DB_VOLUME="$DB_VOLUME_NAME"
+          MARIADB_IMAGE="$MARIADB_IMAGE"
 
           echo "[deploy] Ensuring Docker network $NETWORK_NAME"
           if ! sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
@@ -143,11 +145,6 @@ jobs:
 
           echo "[deploy] Ensuring volume $DB_VOLUME"
           sudo docker volume create "$DB_VOLUME" >/dev/null
-
-          if [ -z "${DB_ROOT_PASSWORD:-}" ] || [ -z "${DB_NAME:-}" ] || [ -z "${DB_USER:-}" ] || [ -z "${DB_PASSWORD:-}" ]; then
-            echo "[deploy] ERROR: Database secrets are not defined. Aborting deployment."
-            exit 1
-          fi
 
           echo "[deploy] Deploying MariaDB container"
           sudo docker pull "$MARIADB_IMAGE"
@@ -193,7 +190,6 @@ jobs:
           echo "[deploy] Container status"
           sudo docker ps --filter "name=$CONTAINER_NAME"
           EOF
-
 
 
 
