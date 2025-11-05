@@ -83,45 +83,44 @@ jobs:
           DB_PASSWORD: ${{ secrets.SERVITEC_DB_PASSWORD }}
         run: |
           ssh -i key.pem "${{ secrets.SERVITEC_SSH_USER }}"@"${{ secrets.SERVITEC_VM_HOST }}" \
-            IMAGE_NAME="$IMAGE_NAME" \
-            CONTAINER_NAME="$CONTAINER_NAME" \
-            VM_PORT_MAPPING="$VM_PORT_MAPPING" \
-            DOCKER_NETWORK="$DOCKER_NETWORK" \
-            DB_CONTAINER_NAME="$DB_CONTAINER_NAME" \
-            DB_VOLUME_NAME="$DB_VOLUME_NAME" \
-            MARIADB_IMAGE="$MARIADB_IMAGE" \
-            DB_ROOT_PASSWORD="$DB_ROOT_PASSWORD" \
-            DB_NAME="$DB_NAME" \
-            DB_USER="$DB_USER" \
-            DB_PASSWORD="$DB_PASSWORD" \
-            'bash -s' "$ACCESS_TOKEN" <<'EOF'
-          if [ -z "${1:-}" ]; then
+            'bash -s' \
+            "$ACCESS_TOKEN" \
+            "$IMAGE_NAME" \
+            "$CONTAINER_NAME" \
+            "$VM_PORT_MAPPING" \
+            "$DOCKER_NETWORK" \
+            "$DB_CONTAINER_NAME" \
+            "$DB_VOLUME_NAME" \
+            "$MARIADB_IMAGE" \
+            "$DB_ROOT_PASSWORD" \
+            "$DB_NAME" \
+            "$DB_USER" \
+            "$DB_PASSWORD" <<'EOF'
+          ACCESS_TOKEN="${1:-}"
+          image_name="${2:-us-central1-docker.pkg.dev/servitec-476518/servitec-app/servitec:latest}"
+          container_name="${3:-servitec_app}"
+          vm_port_mapping="${4:-127.0.0.1:8090:8090}"
+          docker_network="${5:-servitec_network}"
+          db_container_name="${6:-servitec_db}"
+          db_volume_name="${7:-servitec_db_data}"
+          mariadb_image="${8:-mariadb:10.11}"
+          db_root_password="${9:-}"
+          db_name="${10:-}"
+          db_user="${11:-}"
+          db_password="${12:-}"
+
+          if [ -z "$ACCESS_TOKEN" ]; then
             echo "[deploy] ERROR: ACCESS_TOKEN argument not provided."
             exit 1
           fi
 
-          ACCESS_TOKEN="$1"
-
           set -eo pipefail
+          set -u
 
-          image_name="${IMAGE_NAME:-}"
           if [ -z "$image_name" ]; then
-            echo "[deploy] ERROR: IMAGE_NAME environment variable is required."
+            echo "[deploy] ERROR: IMAGE_NAME argument not provided."
             exit 1
           fi
-
-          container_name="${CONTAINER_NAME:-servitec_app}"
-          vm_port_mapping="${VM_PORT_MAPPING:-127.0.0.1:8090:8090}"
-          docker_network="${DOCKER_NETWORK:-servitec_network}"
-          db_container_name="${DB_CONTAINER_NAME:-servitec_db}"
-          db_volume_name="${DB_VOLUME_NAME:-servitec_db_data}"
-          mariadb_image="${MARIADB_IMAGE:-mariadb:10.11}"
-          db_root_password="${DB_ROOT_PASSWORD:-}"
-          db_name="${DB_NAME:-}"
-          db_user="${DB_USER:-}"
-          db_password="${DB_PASSWORD:-}"
-
-          set -u
 
           echo "[deploy] Authenticating against Artifact Registry"
           echo "$ACCESS_TOKEN" | sudo docker login --username oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
@@ -138,18 +137,13 @@ jobs:
           sudo docker image prune -af || true
           sudo docker system prune -af || true
 
-          NETWORK_NAME="$docker_network"
-          DB_CONTAINER="$db_container_name"
-          DB_VOLUME="$db_volume_name"
-          MARIADB_IMAGE="$mariadb_image"
-
-          echo "[deploy] Ensuring Docker network $NETWORK_NAME"
-          if ! sudo docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
-            sudo docker network create "$NETWORK_NAME"
+          echo "[deploy] Ensuring Docker network $docker_network"
+          if ! sudo docker network inspect "$docker_network" >/dev/null 2>&1; then
+            sudo docker network create "$docker_network"
           fi
 
-          echo "[deploy] Ensuring volume $DB_VOLUME"
-          sudo docker volume create "$DB_VOLUME" >/dev/null
+          echo "[deploy] Ensuring volume $db_volume_name"
+          sudo docker volume create "$db_volume_name" >/dev/null
 
           if [ -z "$db_root_password" ] || [ -z "$db_name" ] || [ -z "$db_user" ] || [ -z "$db_password" ]; then
             echo "[deploy] ERROR: Database secrets are not defined. Aborting deployment."
@@ -157,24 +151,24 @@ jobs:
           fi
 
           echo "[deploy] Deploying MariaDB container"
-          sudo docker pull "$MARIADB_IMAGE"
-          sudo docker stop "$DB_CONTAINER" || true
-          sudo docker rm "$DB_CONTAINER" || true
-          sudo docker run -d --name "$DB_CONTAINER" --restart unless-stopped \
-            --network "$NETWORK_NAME" \
-            -v "$DB_VOLUME":/var/lib/mysql \
+          sudo docker pull "$mariadb_image"
+          sudo docker stop "$db_container_name" || true
+          sudo docker rm "$db_container_name" || true
+          sudo docker run -d --name "$db_container_name" --restart unless-stopped \
+            --network "$docker_network" \
+            -v "$db_volume_name":/var/lib/mysql \
             -e MYSQL_ROOT_PASSWORD="$db_root_password" \
             -e MYSQL_DATABASE="$db_name" \
             -e MYSQL_USER="$db_user" \
             -e MYSQL_PASSWORD="$db_password" \
-            "$MARIADB_IMAGE" \
+            "$mariadb_image" \
             --lower_case_table_names=1 \
             --character-set-server=utf8mb4 \
             --collation-server=utf8mb4_unicode_ci
 
           echo "[deploy] Waiting for MariaDB to accept connections"
           for attempt in $(seq 1 30); do
-            if sudo docker exec "$DB_CONTAINER" mysqladmin ping -h 127.0.0.1 -p"$DB_ROOT_PASSWORD" --silent; then
+            if sudo docker exec "$db_container_name" mysqladmin ping -h 127.0.0.1 -p"$db_root_password" --silent; then
               break
             fi
             sleep 2
@@ -184,15 +178,15 @@ jobs:
             fi
           done
 
-          echo "[deploy] Pulling new image $IMAGE_NAME"
-          sudo docker pull "$IMAGE_NAME"
+          echo "[deploy] Pulling new image $image_name"
+          sudo docker pull "$image_name"
 
           echo "[deploy] Running container"
-          sudo docker run -d --name "$CONTAINER_NAME" --restart unless-stopped \
-            --network "$NETWORK_NAME" \
+          sudo docker run -d --name "$container_name" --restart unless-stopped \
+            --network "$docker_network" \
             -p "$vm_port_mapping" \
             -e SPRING_PROFILES_ACTIVE=docker \
-            -e SPRING_DATASOURCE_URL="jdbc:mariadb://$DB_CONTAINER:3306/$db_name" \
+            -e SPRING_DATASOURCE_URL="jdbc:mariadb://$db_container_name:3306/$db_name" \
             -e SPRING_DATASOURCE_USERNAME="$db_user" \
             -e SPRING_DATASOURCE_PASSWORD="$db_password" \
             "$image_name"
@@ -200,7 +194,6 @@ jobs:
           echo "[deploy] Container status"
           sudo docker ps --filter "name=$container_name"
           EOF
-
 
 
 
